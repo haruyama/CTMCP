@@ -507,3 +507,54 @@ M = {NewMemory2}
 {Browse {M.put 3 1}}
 {Browse {M.get 3}}
 {Browse {M.size}}
+
+% ex 10
+
+declare
+C={NewCell 0}
+thread I in
+   I=@C
+   C:=I+1
+end
+thread J in
+   J=@C
+   C:=J+1
+end
+
+{Browse @C}
+
+declare
+C={NewCell 0}
+thread I in
+   I=@C
+   {Delay 1000}
+   C:=I+1
+end
+thread J in
+   J=@C
+   {Delay 1000}
+   C:=J+1
+end
+
+{Browse @C}
+
+
+declare
+C={NewCell 0}
+L={NewLock}
+thread
+   lock L then I in
+      I=@C
+      C:=I+1
+   end
+end
+thread
+   lock L then J in
+      J=@C
+      {Delay 100000}
+      C:=J+1
+   end
+end
+
+{Browse @C}
+
