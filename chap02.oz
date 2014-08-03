@@ -1,3 +1,4 @@
+declare
 proc {Max X Y ?Z}
    if X>=Y then Z=X else Z=Y end
 end
@@ -7,7 +8,7 @@ declare C
 {Browse C}
 
 local P Q in
-   proc {Q X} {Browse stat(X)} end
+   proc {Q X} {Browse start(X)} end
    proc {P X} {Q X} end
    local Q in
       proc {Q X} {Browse dyn(X)} end
