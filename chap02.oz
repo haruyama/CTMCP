@@ -46,3 +46,42 @@ declare L1 L2 X in
 L1=[1 a]
 L2=[X b]
 {Browse L1==L2}
+
+% ex
+declare MulByN N in
+N=3
+proc {MulByN X ?Y}
+   Y=N*X
+end
+
+declare A = 10  B
+
+{MulByN A B}
+{Browse B}
+
+% 一度 Oz を終了させる
+declare A = 10  B
+
+local MulByN in
+   local N in
+      N = 3
+      proc {MulByN X ?Y}
+         Y=N*X
+      end
+   end
+   {MulByN A B}
+   {Browse B}
+end
+
+local MulByN N in
+   local N in
+      N = 3
+      proc {MulByN X ?Y}
+         Y=N*X
+      end
+   end
+   N=10
+   {MulByN A B}
+   {Browse B}
+end
+
