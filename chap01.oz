@@ -312,6 +312,27 @@ end
 
 % {Browse {SumList {Ints 0}}}
 
+declare
+fun lazy {AddList L1 L2}
+   case L1 of H1|T1 then
+      case L2 of H2|T2 then
+         (H1+H2) | {AddList T1 T2}
+      else nil end
+   else nil end
+end
+
+{Browse {AddList [1 2] [3 4]}.2.1}
+
+declare
+fun lazy {SumList2 L}
+   case L of H|T then
+      H | {AddList T {SumList2 L}}
+   else nil end
+end
+
+{Browse {List.take {SumList2 {Ints 1}} 10}}
+
+
 declare Sub Mul Mul1
 fun {Sub A B}  A - B end
 fun {Mul A B}  A * B end
