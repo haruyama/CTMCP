@@ -85,3 +85,73 @@ local MulByN N in
    {Browse B}
 end
 
+% ex. 3
+declare
+fun {Iftest N}
+   if N==1 then
+      10
+   end
+end
+
+{Browse {Iftest 1}}
+{Browse {Iftest 2}}
+
+declare
+proc {IftestProc N ?R}
+   if N==1 then
+      R=10
+   end
+end
+
+declare R
+{IftestProc 2 R}
+{Browse R}
+
+% ex. 4
+
+declare
+fun {IfWithCase P C A}
+   case P
+   of true then {C}
+   else {A}
+   end
+end
+
+{Browse {IfWithCase
+         1==1
+         fun {$} 10 end
+         fun {$} 5 end
+        }} 
+
+{Browse {IfWithCase
+         1==2
+         fun {$} 10 end
+         fun {$} 5 end
+        }} 
+
+% https://github.com/Altech/ctmcp-answers/blob/master/Section02/exer04.oz
+
+% ex. 5
+
+declare
+proc {Test X}
+   case X
+   of a|Z then {Browse 'case'(1)}
+   [] f(a) then {Browse 'case'(2)}
+   [] Y|Z andthen Y==Z then {Browse 'case'(3)}
+   [] Y|Z then {Browse 'case'(4)}
+   [] f(Y) then {Browse 'case'(5)}
+   else {Browse 'case'(6)} end
+end
+
+{Test [b c a]}
+{Test f(b(3))}
+{Test f(a)}
+{Test f(a(3))}
+{Test f(d)}
+{Test [a b c]}
+{Test [c a b]}
+{Test a|a}
+{Test '|'(a b c)}
+
+{Test b|b}
