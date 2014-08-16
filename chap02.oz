@@ -155,3 +155,129 @@ end
 {Test '|'(a b c)}
 
 {Test b|b}
+
+declare
+proc {Test X}
+   case X of f(a Y c) then {Browse 'case'(1)}
+   else {Browse 'case'(2)} end
+end
+
+declare X Y
+{Test f(X b Y)}
+X=a
+Y=c
+
+declare X Y
+{Test f(a Y d)}
+
+declare X Y
+{Test f(X Y d)}
+X=a
+
+declare X Y
+if f(X Y d) == f(a Y c) then {Browse 'case'(1)}
+else {Browse 'case'(2)} end
+X=a
+
+declare Max3 Max5
+proc {SpecialMax Value ?SMax}
+   fun {SMax X}
+      if X>Value then X else Value end
+   end
+end
+{SpecialMax 3 Max3}
+{SpecialMax 5 Max5}
+{Browse [{Max3 4} {Max5 4}]}
+
+declare
+fun {AndThen BP1 BP2}
+   if {BP1} then {BP2} else false end
+end
+
+local X Y in
+   X = {NewCell 0}
+   Y = 
+    {AndThen
+     fun {$}
+        X:=1
+        false
+     end
+     fun {$}
+        X:=2
+        true
+     end
+    }
+   {Browse @X}
+   {Browse Y}
+end
+
+local X Y in
+   X = {NewCell 0}
+   Y = 
+    {AndThen
+     fun {$}
+        X:=1
+        true
+     end
+     fun {$}
+        X:=2
+        true
+     end
+    }
+   {Browse @X}
+   {Browse Y}
+end
+
+declare
+fun {OrElse BP1 BP2}
+   if {BP1} == false then {BP2} else true end
+end
+
+local X Y in
+   X = {NewCell 0}
+   Y = 
+    {OrElse
+     fun {$}
+        X:=1
+        true
+     end
+     fun {$}
+        X:=2
+        true
+     end
+    }
+   {Browse @X}
+   {Browse Y}
+end
+
+local X Y in
+   X = {NewCell 0}
+   Y = 
+    {OrElse
+     fun {$}
+        X:=1
+        false
+     end
+     fun {$}
+        X:=2
+        false
+     end
+    }
+   {Browse @X}
+   {Browse Y}
+end
+
+declare
+fun {Sum1 N}
+   if N==0 then 0 else N + {Sum1 N-1} end
+end
+declare
+fun {Sum2 N S}
+   if N==0 then S else {Sum2 N-1 N+S} end
+end
+
+{Browse {Sum1 10}}
+{Browse {Sum2 10 0}}
+
+%{Browse {Sum1 10000000}}
+{Browse {Sum2 10000000 0}}
