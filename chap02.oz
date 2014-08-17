@@ -281,3 +281,39 @@ end
 
 %{Browse {Sum1 10000000}}
 {Browse {Sum2 10000000 0}}
+
+declare
+fun {SMerge Xs Ys}
+   case Xs#Ys
+   of nil#Ys then Ys
+   [] Xs#nil then Xs
+   [] (X|Xr)#(Y|Yr) then
+      if X =< Y then X|{SMerge Xr Ys}
+      else Y|{SMerge Xs Yr} end
+   end
+end
+
+{Browse {SMerge [1 5 6] [2 4 7]}}
+
+% https://github.com/Altech/ctmcp-answers/blob/master/Section02/exer10.oz
+
+declare
+fun {IsEven X}
+   if X==0 then true else {IsOdd X-1} end
+end
+
+declare
+fun {IsOdd X}
+   if X==0 then false else {IsEven X-1} end
+end
+
+{Browse {IsEven 9}}
+{Browse {IsEven 10}}
+
+% https://github.com/Altech/ctmcp-answers/blob/master/Section02/exer12.oz
+
+declare X Y Z W
+X = [a Z]
+Y = [W b]
+X = Y
+{Browse X#Y#Z#W}
