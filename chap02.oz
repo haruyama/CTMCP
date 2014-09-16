@@ -7,6 +7,12 @@ declare C
 {Max 1 2 C}
 {Browse C}
 
+declare A B C in
+C=A+B
+{Browse C}
+A=10
+B=200
+
 local P Q in
    proc {Q X} {Browse start(X)} end
    proc {P X} {Q X} end
@@ -46,6 +52,27 @@ declare L1 L2 X in
 L1=[1 a]
 L2=[X b]
 {Browse L1==L2}
+
+declare
+fun {Eval E}
+   if {IsNumber E} then E
+   else
+      case E
+      of plus(X Y) then {Eval X} + {Eval Y}
+      [] times(X Y) then {Eval X} * {Eval Y}
+      else raise illFormedExpr(E) end
+      end
+   end
+end
+
+try
+   {Browse {Eval plus(plus(5 5) 10)}}
+   {Browse {Eval times(3 7)}}
+   {Browse {Eval minus(8 2)}}
+catch illFormedExpr(E) then
+   {Browse 'aaa'#E#'bbb'}
+end
+
 
 % ex
 declare MulByN N in
