@@ -104,7 +104,7 @@ local MulByN N in
    local N in
       N = 3
       proc {MulByN X ?Y}
-         Y=N*X
+         Y=1N*X
       end
    end
    N=10
@@ -121,7 +121,23 @@ fun {Iftest N}
 end
 
 {Browse {Iftest 1}}
-{Browse {Iftest 2}}
+try
+   {Browse {Iftest 2}}
+catch X then
+   {Browse X}
+end
+
+declare
+fun {Iftest2 N}
+   if N==1 then
+      10
+   else
+      false
+   end
+end
+
+{Browse {Iftest2 1}}
+{Browse {Iftest2 2}}
 
 declare
 proc {IftestProc N ?R}
@@ -180,6 +196,7 @@ end
 {Test [c a b]}
 {Test a|a}
 {Test '|'(a b c)}
+{Browse '|'(a b c)}
 
 {Test b|b}
 
@@ -204,7 +221,6 @@ X=a
 declare X Y
 if f(X Y d) == f(a Y c) then {Browse 'case'(1)}
 else {Browse 'case'(2)} end
-X=a
 
 declare Max3 Max5
 proc {SpecialMax Value ?SMax}
@@ -306,8 +322,12 @@ end
 {Browse {Sum1 10}}
 {Browse {Sum2 10 0}}
 
-%{Browse {Sum1 10000000}}
-{Browse {Sum2 10000000 0}}
+%try
+%   {Browse {Sum1 10000000}}
+%catch X then
+%   {Browse X}
+%end
+{Browse {Sum2 100000000 0}}
 
 declare
 fun {SMerge Xs Ys}
