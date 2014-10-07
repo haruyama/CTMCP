@@ -44,6 +44,16 @@ L3='|'(1:1 2:'|'(2 nil))
 {Browse L1==L3}
 
 declare L1 L2 X in
+L1=[1]
+L2=[X]
+{Browse L1==L2}
+
+X=1
+
+X=2
+
+
+declare L1 L2 X in
 L1=[X]
 L2=[X]
 {Browse L1==L2}
@@ -364,3 +374,5 @@ X = [a Z]
 Y = [W b]
 X = Y
 {Browse X#Y#Z#W}
+
+{Browse '#'(1 2 3)}
