@@ -151,6 +151,7 @@ end
 
 {Browse {Fact2 9}}
 
+%3.4
 declare
 fun {Length Ls}
    case Ls
@@ -234,3 +235,21 @@ in
 end
 
 {Browse {Reverse2 [1 2 3 4]}}
+
+declare
+fun {LengthL Xs}
+   case Xs
+   of nil then 0
+   [] X|Xr andthen {IsList X} then
+      {LengthL X} + {LengthL Xr}
+   [] X|Xr then
+      1 + {LengthL Xr}
+   end
+end
+fun {IsCons X} case X of _|_ then true else false end end
+fun {IsList X} X==nil orelse {IsCons X} end
+
+declare
+X=[[1 2] 4 nil  [[5] 10]]
+{Browse {LengthL X}}
+{Browse {LengthL [X X]}}
