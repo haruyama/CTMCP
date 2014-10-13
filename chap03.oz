@@ -443,3 +443,210 @@ in {ReverseD Xs Y1 nil} Y1 end
 {Browse {ReverseDL [1 2 4 5]}}
 
 %3.4.5
+
+declare
+fun {NewQueue} q(nil nil) end
+fun {Check Q}
+   case Q of q(nil R) then q({Reverse R} nil) else Q end
+end
+fun {Insert Q X}
+   case Q of q(F R) then {Check q(F X|R)} end
+end
+fun {Delete Q X}
+   case Q of q(F R) then F1 in F=X|F1 {Check q(F1 R)} end
+end
+fun {IsEmpty Q}
+   case Q of q(F R) then F==nil end
+end
+
+local Q={NewCell {NewQueue}} X Y in
+   Q := {Insert @Q 1}
+   Q := {Insert @Q 2}
+   {Browse @Q}
+   Q := {Delete @Q X}
+   {Browse X}
+   Q := {Delete @Q Y}
+   {Browse Y}
+end
+
+declare
+fun {NewQueue} X in q(0 X X) end
+fun {Insert Q X}
+   case Q of q(N S E) then E1 in E=X|E1 q(N+1 S E1) end
+end
+fun {Delete Q X}
+   case Q of q(N S E) then S1 in S=X|S1 q(N-1 S1 E) end
+end
+fun {IsEmpty Q}
+   case Q of q(N S E) then N==0 end
+end
+
+local Q={NewCell {NewQueue}} X Y in
+   Q := {Insert @Q 1}
+   Q := {Insert @Q 2}
+   {Browse @Q}
+   Q := {Delete @Q X}
+   {Browse X}
+   Q := {Delete @Q Y}
+   {Browse Y}
+end
+
+%3.4.6
+declare
+fun {Lookup X T}
+   case T
+   of leaf then notfound
+   [] tree(Y V T1 T2) then
+      if X<Y then {Lookup X T1}
+      elseif X>Y then {Lookup X T2}
+      else found(V) end
+   end
+end
+
+declare
+fun {Lookup X T}
+   case T
+   of leaf then notfound
+   [] tree(Y V _ _) andthen X==Y then found(V)
+   [] tree(Y _ T1 _) andthen X<Y then {Lookup X T1}
+   [] tree(Y _ _ T2) andthen X>Y then {Lookup X T2}
+   end
+end
+
+declare
+fun {Insert X V T}
+   case T
+   of leaf then tree(X V leaf leaf)
+   [] tree(Y _ T1 T2) andthen X==Y then tree(Y V T1 T2)
+   [] tree(Y W T1 T2) andthen X<Y then tree(Y W {Insert X V T1} T2)
+   [] tree(Y W T1 T2) andthen X>Y then tree(Y W T1 {Insert X V T2})
+   end
+end
+
+declare
+fun {Delete X T}
+   case T
+   of leaf then leaf
+   [] tree(Y _ T1 T2) andthen X==Y then
+      case {RemoveSmallest T2}
+      of none then T1
+      [] Yp#Vp#Tp then tree(Yp Vp T1 Tp)
+      end
+   [] tree(Y W T1 T2) andthen X<Y then tree(Y W {Delete X T1} T2)
+   [] tree(Y W T1 T2) andthen X>Y then tree(Y W T1 {Delete X T2})
+   end
+end
+fun {RemoveSmallest T}
+   case T
+   of leaf then none
+   [] tree(Y V T1 T2) then
+      case {RemoveSmallest T1}
+      of none then Y#V#T2
+      [] Yp#Vp#Tp then Yp#Vp#tree(X V Tp T2)
+      end
+   end
+end
+
+local T={NewCell leaf} in
+   T := {Insert 1 hoge @T}
+   T := {Insert 0 nya @T}
+   T := {Insert 2 kuke @T}
+   {Browse @T}
+   T := {Delete 1 @T}
+   {Browse @T}
+   {Browse {Lookup 0 @T}}
+   {Browse {Lookup ~1 @T}}
+end
+
+declare
+proc {DFSAccLoop2 T ?S1 Sn}
+   case T
+   of leaf then S1=Sn
+   [] tree(Key Val L R) then S2 S3 in
+      S1=Key#Val|S2
+      {DFSAccLoop2 L S2 S3}
+      {DFSAccLoop2 R S3 Sn}
+   end
+end
+fun {DFSAcc2 T} {DFSAccLoop2 T $ nil} end
+
+local T={NewCell leaf} in
+   T := {Insert 2 kuke @T}
+   T := {Insert 1 hoge @T}
+   T := {Insert 3 kuke @T}
+   T := {Insert 0 nya @T}
+   T := {Insert 4 nya @T}
+   {Browse {DFSAcc2 @T}}
+end
+
+declare
+fun {BFSAcc T}
+   fun {NewQueue} X in q(0 X X) end
+   fun {Insert Q X}
+      case Q of q(N S E) then E1 in E=X|E1 q(N+1 S E1) end
+   end
+   fun {Delete Q X}
+      case Q of q(N S E) then S1 in S=X|S1 q(N-1 S1 E) end
+   end
+   fun {IsEmpty Q}
+      case Q of q(N _ _) then N==0 end
+   end
+   fun {TreeInsert Q T}
+      if T\=leaf then {Insert Q T} else Q end
+   end
+   proc {BFSQueue Q1 ?S1 Sn}
+      if {IsEmpty Q1} then S1=Sn
+      else X Q2 Key Val L R S2 in
+         Q2={Delete Q1 X}
+         tree(Key Val L R)=X
+         S1=Key#Val|S2
+         {BFSQueue {TreeInsert {TreeInsert Q2 L} R} S2 Sn}
+      end
+   end
+in
+   {BFSQueue {TreeInsert {NewQueue} T} $ nil}
+end
+
+
+local T={NewCell leaf} in
+   T := {Insert 2 kuke @T}
+   T := {Insert 1 hoge @T}
+   T := {Insert 4 kuke @T}
+   T := {Insert 3 kuke @T}
+   T := {Insert 0 nya @T}   
+   {Browse {BFSAcc @T}}
+end
+
+declare
+proc {DFS T}
+   fun {TreeInsert S T}
+      if T\=leaf then T|S else S end
+   end
+   proc {DFSStack S1}
+      case S1
+      of nil then skip
+      [] X|S2 then
+         tree(Key Val L R) = X
+      in
+         {Browse Key#Val}
+         {DFSStack {TreeInsert {TreeInsert S2 R} L}}
+      end
+   end
+in
+   {DFSStack {TreeInsert nil T}}
+end
+
+local T={NewCell leaf} in
+   T := {Insert 2 kuke @T}
+   T := {Insert 1 hoge @T}
+   T := {Insert 4 kuke @T}
+   T := {Insert 3 kuke @T}
+   T := {Insert 0 nya @T}   
+   {DFS @T}
+end
+
+%3.4.7
+
+%3.4.8
+
+      
