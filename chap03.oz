@@ -351,3 +351,95 @@ end
 
 
 %3.4.4
+
+declare
+fun {AppendD D1 D2}
+   S1#E1=D1
+   S2#E2=D2
+in
+   E1=S2
+   S1#E2
+end
+
+local X Y in {Browse {AppendD (1|2|3|X)#X (4|5|Y)#Y}} end
+
+declare
+fun {Flatten Xs}
+   case Xs
+   of nil then nil
+   [] X|Xr andthen {IsList X} then
+      {Append {Flatten X} {Flatten Xr}}
+   [] X|Xr then
+      X| {Flatten Xr}
+   end
+end
+
+{Browse {Flatten [1 [2 3] 4 [5]]}}
+{Browse {Flatten [[a b] [[c] [d]] nil [e [f]]]}}
+
+declare
+fun {Flatten2 Xs}
+   proc {FlattenD Xs ?Ds}
+      case Xs
+      of nil then Y in Ds=Y#Y
+      [] X|Xr andthen {IsList X} then Y1 Y2 Y4 in
+         Ds=Y1#Y4
+         {FlattenD X Y1#Y2}
+         {FlattenD Xr Y2#Y4}
+      [] X|Xr then Y1 Y2 in
+         Ds=(X|Y1)#Y2
+         {FlattenD Xr Y1#Y2}
+      end
+   end Ys
+in {FlattenD Xs Ys#nil} Ys end
+
+{Browse {Flatten2 [1 [2 3] 4 [5]]}}
+{Browse {Flatten2 [[a b] [[c] [d]] nil [e [f]]]}}
+
+declare
+fun {Flatten3 Xs}
+   proc {FlattenD Xs ?S E}
+      case Xs
+      of nil then S = E
+      [] X|Xr andthen {IsList X} then Y2 in
+         {FlattenD X S Y2}
+         {FlattenD Xr Y2 E}
+      [] X|Xr then Y1 in
+         S=X|Y1
+         {FlattenD Xr Y1 E}
+      end
+   end Ys
+in {FlattenD Xs Ys nil} Ys end
+
+{Browse {Flatten3 [1 [2 3] 4 [5]]}}
+{Browse {Flatten3 [[a b] [[c] [d]] nil [e [f]]]}}
+
+declare
+fun {Flatten4 Xs}
+   fun {FlattenD Xs E}
+      case Xs
+      of nil then E
+      [] X|Xr andthen {IsList X} then 
+         {FlattenD X {FlattenD Xr E}}
+      [] X|Xr then
+         X| {FlattenD Xr E}
+      end
+   end Ys
+in {FlattenD Xs nil} end
+
+{Browse {Flatten4 [1 [2 3] 4 [5]]}}
+{Browse {Flatten4 [[a b] [[c] [d]] nil [e [f]]]}}
+
+declare
+fun {ReverseDL Xs}
+   proc {ReverseD Xs ?Y1 Y}
+      case Xs
+      of nil then Y1 = Y
+      [] X|Xr then {ReverseD Xr Y1 X|Y}
+      end
+   end Y1
+in {ReverseD Xs Y1 nil} Y1 end
+
+{Browse {ReverseDL [1 2 4 5]}}
+
+%3.4.5
