@@ -491,6 +491,52 @@ local Q={NewCell {NewQueue}} X Y in
    {Browse Y}
 end
 
+declare Q1 Q2 Q3 Q4 Q5 Q6 Q7 in
+Q1={NewQueue}
+Q2={Insert Q1 peter}
+Q3={Insert Q2 paul}
+local X in Q4={Delete Q3 X} {Browse X} end
+Q5={Insert Q4 mary}
+local X in Q6={Delete Q5 X} {Browse X} end
+local X in Q7={Delete Q6 X} {Browse X} end
+
+declare Q1 Q2 Q3 Q4 Q5 Q6 Q7 in
+Q1={NewQueue}
+Q2={Insert Q1 peter}
+Q3={Insert Q2 paul}
+local X in Q4={Delete Q3 X} {Browse X} end
+local X in Q5={Delete Q4 X} {Browse X} end
+local X in Q6={Delete Q5 X} {Browse X} end
+Q7={Insert Q6 mary}
+
+% https://github.com/draftcode/ctmcp-answers/blob/master/Section3/prob14.markdown
+
+% 最悪時では動かない?
+declare Q1 Q2 Q3 Q4 Q5 Q6 in
+Q1={NewQueue}
+Q2={Insert Q1 peter}
+Q3={Insert Q2 paul}
+Q4={Insert Q2 mary}
+local X in Q5={Delete Q3 X} {Browse X} end
+local X in Q6={Delete Q4 X} {Browse X} end
+
+% http://www.kmonos.net/pub/Presen/PFDS.pdf
+
+declare
+proc {ForkD D ?E ?F}
+   D1#nil = D
+   E1#E0=E {Append D1 E0 E1}
+   F1#F0=F {Append D1 F0 F1}
+in skip end
+proc {ForkQ Q ?Q1 ?Q2}
+   q(N S E) = Q
+   q(N S1 E1) = Q1
+   q(N S2 E2) = Q2
+in
+   {ForkD S#E S1#E1 S2#E2}
+end
+
+
 %3.4.6
 declare
 fun {Lookup X T}
@@ -542,7 +588,7 @@ fun {RemoveSmallest T}
    [] tree(Y V T1 T2) then
       case {RemoveSmallest T1}
       of none then Y#V#T2
-      [] Yp#Vp#Tp then Yp#Vp#tree(X V Tp T2)
+      [] Yp#Vp#Tp then Yp#Vp#tree(Y V Tp T2)
       end
    end
 end
@@ -649,4 +695,93 @@ end
 
 %3.4.8
 
-      
+declare
+fun {COP Y}
+   Y=='<' orelse Y=='>' orelse Y=='=<' orelse
+   Y=='>=' orelse Y=='--' orelse Y=='!='
+end
+fun {EOP Y} Y=='+' orelse Y=='-' end
+fun {TOP Y} Y=='*' orelse Y=='/' end
+fun {Fact S1 Sn}
+   T|S2=S1 in
+   if {IsInt T} orelse {IsIdent T} then
+      S2=Sn
+      T
+   else E S2 S3 in
+      S1='('|S2
+      E={Expr S2 S3}
+      S3=')'|Sn
+      E
+   end
+end
+fun {Id S1 Sn} X in S1=X|Sn true={IsIdent X} X end
+fun {IsIdent X} {IsAtom X} end
+fun {Sequence NonTerm Sep S1 Sn}
+   fun {SequenceLoop Prefix S2 Sn}
+      case S2 of T|S3 andthen {Sep T} then Next S4 in
+         Next={NonTerm S3 S4}
+         {SequenceLoop T(Prefix Next) S4 Sn}
+      else
+         Sn=S2 Prefix
+      end
+   end
+   First S2
+in
+   First={NonTerm S1 S2}
+   {SequenceLoop First S2 Sn}
+end
+fun {Comp S1 Sn} {Sequence Expr COP S1 Sn} end
+fun {Expr S1 Sn} {Sequence Term EOP S1 Sn} end
+fun {Term S1 Sn} {Sequence Fact TOP S1 Sn} end
+
+
+declare
+fun {Prog S1 Sn}
+   Y Z S2 S3 S4 S5
+in
+   S1=program|S2
+   Y={Id S2 S3}
+   S3=';'|S4
+   Z={Stat S4 S5}
+   S5='end'|Sn
+   prog(Y Z)
+end
+fun {Stat S1 Sn}
+   T|S2=S1 in
+   case T
+   of begin then
+      {Sequence Stat fun {$ X} X==';' end S2 'end'|Sn}
+   [] 'if' then C X1 X2 S3 S4 S5 S6 in
+      C={Comp S2 S3}
+      S3='then'|S4
+      X1={Stat S4 S5}
+      S5='else'|S6
+      X2={Stat S6 Sn}
+      'if'(C X1 X2)
+   [] 'while' then C X S3 S4 in
+      C={Comp S2 S3}
+      S3='do'|S4
+      X={Stat S4 Sn}
+      while(C X)
+   [] read then I in
+      I={Id S2 Sn}
+      read(I)
+   [] write then E in
+      E={Expr S2 Sn}
+      write(E)
+   elseif {IsIdent T} then E S3 in
+      S2=':='|S3
+      E={Expr S3 Sn}
+      assign(T E)
+   else
+      S1=Sn
+      raise error(S1) end
+   end
+end
+
+declare A Sn in
+A={Prog
+   [program foo ';'
+    while a '+' 3 '<' b 'do' b ':=' b '+' 1 'end']
+   Sn}
+{Browse A}
