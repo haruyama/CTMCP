@@ -785,3 +785,248 @@ A={Prog
     while a '+' 3 '<' b 'do' b ':=' b '+' 1 'end']
    Sn}
 {Browse A}
+
+
+% 3.6
+declare
+proc {QuadraticEquation A B C ?RealSol ?X1 ?X2}
+   D = B*B-4.0*A*C
+in
+   if D>0.0 then
+      RealSol=true
+      X1=(~B+{Sqrt D})/(2.0*A)
+      X2=(~B-{Sqrt D})/(2.0*A)
+   else
+      RealSol=false
+      X1=~B/(2.0*A)
+      X2={Sqrt ~D}/(2.0*A)
+   end
+end
+
+declare RS X1 X2 in
+{QuadraticEquation 1.0 3.0 2.0 RS X1 X2}
+{Browse RS#X1#X2}
+
+declare RS X1 X2 in
+{QuadraticEquation 1.0 ~3.0 2.0 RS X1 X2}
+{Browse RS#X1#X2}
+
+declare
+fun {SumList L}
+   case L
+   of nil then 0
+   [] X|L1 then X+{SumList L1}
+   end
+end
+
+declare
+fun {FoldR L F U}
+   case L
+   of nil then U
+   [] X|L1 then {F X {FoldR L1 F U}}
+   end
+end
+
+declare
+fun {SumList L}
+   {FoldR L fun {$ X Y} X + Y end 0}
+end
+
+{Browse {SumList [1 2 3]}}
+
+declare
+fun {ProductList L}
+   {FoldR L fun {$ X Y} X*Y end 1}
+end
+
+{Browse {ProductList [1 2 3 4]}}
+
+declare
+fun {Some L}
+   {FoldR L fun {$ X Y} X orelse Y end false}
+end
+
+{Browse {Some nil}}
+{Browse {Some [false]}}
+{Browse {Some [false true false]}}
+
+declare
+fun {GenericMergeSort F Xs}
+   fun {Merge Xs Ys}
+      case Xs # Ys
+      of nil # Ys then Ys
+      [] Xs # nil then Xs
+      [] (X|Xr) # (Y|Yr) then
+         if {F X Y} then X| {Merge Xr Ys}
+         else Y| {Merge Xs Yr}
+         end
+      end
+   end
+   proc {Split Xs ?Ys ?Zs}
+      case Xs
+      of nil then Ys=nil Zs=nil
+      [] [X] then Ys=[X] Zs=nil
+      [] X1|X2|Xr then Yr Zr in
+         Ys=X1|Yr
+         Zs=X2|Zr
+         {Split Xr Yr Zr}
+      end
+   end
+   fun {MergeSort Xs}
+      case Xs
+      of nil then nil
+      [] [X] then [X]
+      else Ys Zs in
+         {Split Xs Ys Zs}
+         {Merge {MergeSort Ys} {MergeSort Zs}}
+      end
+   end
+in
+   {MergeSort Xs}
+end
+
+declare
+fun {MergeSort Xs}
+   {GenericMergeSort fun {$ A B} A < B end Xs}
+end
+
+{Browse {MergeSort [ 3 4 1 5 9 2]}}
+
+% mozart2 だと Number.'<' ではなく Value.'<' だった
+declare
+fun {MergeSort Xs}
+   {GenericMergeSort Value.'<' Xs}
+end
+
+{Browse {MergeSort [ 3 4 1 5 9 2]}}
+
+%3.6.2
+
+declare
+fun {FoldL L F U}
+   case L
+   of nil then U
+   [] X|L2 then
+      {FoldL L2 F {F U X}}
+   end
+end
+
+{Browse {FoldL [1 2 3] Number.'+' 0}}
+
+declare
+fun {FoldR L F U}
+   fun {Loop L U}
+      case L
+      of nil then U
+      [] X|L2 then
+         {Loop L2 {F X U}}
+      end
+   end
+in
+   {Loop {Reverse L} U}
+end
+
+{Browse {FoldR [1 2 3] Number.'+' 0}}
+
+declare
+L=for I in 1..100 collect:C do
+     if I mod 2 \= 0 andthen I mod 3 \= 0 then {C I} end
+  end
+
+{Browse L}
+
+declare
+L=for I in 1..100 collect:C do
+     if I mod 2 \= 0 andthen I mod 3 \= 0 then
+        for J in 2..10 do
+           if I mod J == 0 then {C I#J} end
+        end
+     end
+  end
+
+{Browse L}
+
+% 3.6.4
+
+declare
+fun {Map Xs F}
+   case Xs
+   of nil then nil
+   [] X|Xr then {F X} | {Map Xr F}
+   end
+end
+
+declare
+fun {Map Xs F}
+   {FoldR Xs fun {$ I A} {F I}|A end nil}
+end
+
+{Browse {Map [1 2 3] fun {$ I} I*I end}}
+
+declare
+fun {Map Xs F}
+   {Reverse {FoldL Xs fun {$ A I} {F I}|A end nil}}
+end
+
+{Browse {Map [1 2 3] fun {$ I} I*I end}}
+
+declare
+fun {Filter Xs F}
+   case Xs
+   of nil then nil
+   [] X|Xr andthen {F X} then X| {Filter Xr F}
+   [] X|Xr then {Filter Xr F}
+   end
+end
+
+{Browse {Filter [1 2 3 4] fun {$ A} A <3 end}}
+
+declare
+fun {Filter Xs F}
+   {FoldR Xs fun {$ I A} if {F I} then I|A else A end end nil}
+end
+
+{Browse {Filter [1 2 3 4] fun {$ A} A <3 end}}
+
+%3.6.4.2
+
+declare
+proc {VisitNodes Tree P}
+   case Tree of tree(sons:Sons ...) then
+      {P Tree}
+      for T in Sons do {VisitNodes T P} end
+   end
+end
+
+declare
+proc {VisitLinks Tree P}
+   case Tree of tree(sons:Sons ...) then
+      for T in Sons do {P Tree T}  {VisitLinks T P} end
+   end
+end
+
+declare
+local
+   fun {FoldTreeR Sons TF LF U}
+      case Sons
+      of nil then U
+      [] S|Sons2 then
+         {LF {FoldTree S TF LF U} {FoldTreeR Sons2 TF LF U}}
+      end
+   end
+in
+   fun {FoldTree Tree TF LF U}
+      case Tree of tree(node:N sons:Sons ...) then
+         {TF N {FoldTreeR Sons TF LF U}}
+      end
+   end
+end
+
+declare
+T=tree(node:1
+       sons:[tree(node:2 sons:nil)
+             tree(node:3 sons:[tree(node:4 sons:nil)])])
+{Browse {FoldTree T Number.'+' Number.'+' 0}}
+
+
+
