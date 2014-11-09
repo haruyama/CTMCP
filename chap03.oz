@@ -1196,3 +1196,34 @@ She is lost and gone forever, oh my darling, Clementine"
 %{Browse {CharsToWords nil T}}
 %{Browse {WordToAtom "abc"}}
 
+% 3.7.5
+
+declare
+proc {NewWrapper ?Wrap ?UnWrap}
+   Key={NewName} in
+   fun {Wrap X}
+      {Chunk.new w(Key:X)}
+   end
+   fun {UnWrap W}
+      try W.Key catch _ then raise error(unwrap(W)) end end
+   end
+end
+
+
+declare Wrap UnWrap S SS in
+S=[1 2 3]
+{NewWrapper Wrap UnWrap}
+SS={Wrap S}
+{Browse SS}
+%S={UnWrap SS}
+
+declare
+local Wrap UnWrap in
+   {NewWrapper Wrap UnWrap}
+   fun {NewStack} {Wrap nil} end
+   fun {Push S E} {Wrap E|{UnWrap S}} end
+   fun {Pop S E} case {UnWrap S} of X|S1 then E=X {Wrap S1} end end
+   fun {IsEmpty S} {UnWrap S}==nil end
+end
+
+
