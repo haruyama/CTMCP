@@ -1,5 +1,5 @@
 % 3
-% さらに a < b か b < a なのかのチェックが必要
+% a < b とは問題文にないのでそのチェックが必要
 
 declare
 fun {BinarySearch F A B}
@@ -7,6 +7,7 @@ fun {BinarySearch F A B}
    else M in
       M = (A+B)/2.0
       if {F M} > 0.0 then {BinarySearch F A M}
+      elseif {F M} == 0. then M
       else {BinarySearch F M B}
       end
    end

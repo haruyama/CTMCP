@@ -305,6 +305,7 @@ fun {MergeSort Xs}
 end
 
 {Browse {MergeSort [3 5 0 9 3 2 1 7 4]}}
+{Browse {MergeSort [3 5 0 9 8 1]}}
 
 %3.4.3
 
