@@ -1150,3 +1150,49 @@ D4={Put D3 10 d}
 {Browse {Domain D3}}
 {Browse {CondGet D4 10 unk}}
 {Browse {CondGet D4 1 unk}}
+
+%3.7.3
+
+declare
+fun {WordChar C}
+   (&a=<C andthen C=<&z) orelse
+   (&A=<C andthen C=<&Z) orelse (&0=<C andthen C=<&9)
+end
+fun {WordToAtom PW}
+   {StringToAtom {Reverse PW}}
+end
+fun {IncWord D W}
+   {Put D W {CondGet D W 0}+1}
+end
+fun {CharsToWords PW Cs}
+   case Cs
+   of nil andthen PW==nil then
+      nil
+   [] nil then
+      [{WordToAtom PW}]
+   [] C|Cr andthen {WordChar C} then
+      {CharsToWords {Char.toLower C}|PW Cr}
+   [] _|Cr andthen PW==nil then
+      {CharsToWords nil Cr}
+   [] _|Cr then
+      {WordToAtom PW}|{CharsToWords nil Cr}
+   end
+end
+fun {CountWords D Ws}
+   case Ws
+   of W|Wr then {CountWords {IncWord D W} Wr}
+   [] nil then D
+   end
+end
+fun {WordFreq Cs}
+   {CountWords {NewDictionary} {CharsToWords nil Cs}}
+end
+      
+
+declare
+T="Oh my darling, oh my darling, oh my darling, Clementine.
+She is lost and gone forever, oh my darling, Clementine"
+{Browse {WordFreq T}}
+%{Browse {CharsToWords nil T}}
+%{Browse {WordToAtom "abc"}}
+
