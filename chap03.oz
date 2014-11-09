@@ -1035,5 +1035,117 @@ T=tree(node:1
              tree(node:3 sons:[tree(node:4 sons:nil)])])
 {Browse {FoldTree T Number.'+' Number.'+' 0}}
 
+% 3.7
 
+declare
+fun {NewStack} nil end
+fun {Push S E} E|S end
+fun {Pop S E} case S of X|S1 then E=X S1 end end
+fun {IsEmpty S} S==nil end
 
+declare S1 S2 S3 S4 S5 E2 E1 in
+S1={NewStack}
+S2={Push S1 1}
+S3={Push S2 2}
+{Browse S3}
+S4={Pop S3 E2}
+{Browse E2}
+S5={Pop S4 E1}
+{Browse E1}
+
+declare
+fun {NewStack} stackEmpty end
+fun {Push S E} stack(E S) end
+fun {Pop S E} case S of stack(X S1) then E=X S1 end end
+fun {IsEmpty S} S==stackEmpty end
+
+declare S1 S2 S3 S4 S5 E2 E1 in
+S1={NewStack}
+S2={Push S1 1}
+S3={Push S2 2}
+{Browse S3}
+S4={Pop S3 E2}
+{Browse E2}
+S5={Pop S4 E1}
+{Browse E1}
+
+declare
+fun {NewDictionary} nil end
+fun {Put Ds Key Value}
+   case Ds
+   of nil then [Key#Value]
+   [] (K#_)|Dr andthen K==Key then
+      (Key#Value)|Dr
+   [] (K#V)|Dr andthen K>Key then
+      (Key#Value)| (K#V) |Dr
+   [] (K#V)|Dr andthen K<Key then      
+      (K#V) | {Put Dr Key Value}
+   end
+end
+fun {CondGet Ds Key Default}
+   case Ds
+   of nil then Default
+   [] (K#V)|_ andthen K==Key then
+      V
+   [] (K#_)|_ andthen K>Key then
+      Default
+   [] (K#_)|Dr andthen K<Key then      
+      {CondGet Dr Key Default}
+   end
+end
+fun {Domain Ds}
+   {Map Ds fun {$ K#_} K end}
+end
+
+declare D1 D2 D3 in
+D1={Put {NewDictionary} 10 a}
+D2={Put D1 5 b}
+D3={Put D2 15 c}
+{Browse D3}
+{Browse {Domain D3}}
+{Browse {CondGet D3 10 unk}}
+{Browse {CondGet D3 1 unk}}
+
+declare
+fun {NewDictionary} leaf end
+fun {Put Ds Key Value}
+   case Ds
+   of leaf then tree(Key Value leaf leaf)
+   [] tree(K _ T1 T2) andthen K==Key then tree(Key Value T1 T2)
+   [] tree(K V T1 T2) andthen K>Key then tree(K V {Put T1 Key Value } T2)
+   [] tree(K V T1 T2) andthen K<Key then tree(K V T1 {Put T2 Key Value})
+   end
+end
+fun {CondGet Ds Key Default}
+   case Ds
+   of leaf then Default
+   [] tree(K V T1 T2) then
+      if K>Key then {CondGet T1 Key Default}
+      elseif K<Key then {CondGet T2 Key Default}
+      else V end
+   end
+end
+fun {Domain Ds}
+   proc {DomainD Ds ?S1 Sn}
+      case Ds
+      of leaf then
+         S1=Sn
+      [] tree(K _ L R) then S2 S3 in
+         {DomainD L S1 S2}
+         S2=K|S3
+         {DomainD R S3 Sn}
+      end
+   end D
+in
+   {DomainD Ds D nil} D
+end
+
+declare D1 D2 D3 D4 in
+D1={Put {NewDictionary} 10 a}
+D2={Put D1 5 b}
+D3={Put D2 15 c}
+D4={Put D3 10 d}
+{Browse D3}
+{Browse {Domain D3}}
+{Browse {CondGet D4 10 unk}}
+{Browse {CondGet D4 1 unk}}
