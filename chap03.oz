@@ -786,6 +786,13 @@ A={Prog
    Sn}
 {Browse A}
 
+declare A Sn in
+A={Comp
+   [a '+' 3 '<' b]
+   Sn}
+{Browse A}
+
+
 
 % 3.6
 declare
