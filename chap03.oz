@@ -1225,5 +1225,3 @@ local Wrap UnWrap in
    fun {Pop S E} case {UnWrap S} of X|S1 then E=X {Wrap S1} end end
    fun {IsEmpty S} {UnWrap S}==nil end
 end
-
-
