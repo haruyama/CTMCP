@@ -1,2 +1,5 @@
 factfile
 foo.txt
+*.ozf
+\#*
+.*
