@@ -357,3 +357,47 @@ in
 end
 
 {Browse {QuickSort [3 2 1 4 5 6 0 1]}}
+
+% 16
+
+% https://github.com/Altech/ctmcp-answers/blob/master/Section03/exer16.oz
+
+declare
+fun {Convolute Xs Ys}
+   proc {ConvoluteIter Xs Ys ?Zs}
+      case Xs
+      of nil then Zs = nil
+      [] X|Xr then
+         case Ys of Y|Yr then Rs in
+            Zs=X#Y|Rs
+            {ConvoluteIter Xr Yr Rs}
+         end
+      end
+   end
+in
+%   {ConvoluteIter Xs {Reverse Ys} $}
+   {ConvoluteIter Xs {Reverse Ys}}   
+end
+
+declare
+{Browse {Convolute [2 4 6] [1 3 5]}}
+
+% https://haskelladdict.wordpress.com/tag/danvy/
+
+declare
+fun {Convolute Xs Ys}
+   proc {ConvoluteIter Xs ?Zs ?Ws}
+      case Xs
+      of nil then Zs = nil Ws = Ys
+      [] X|Xr then B Zr in
+         Zs = X#B|Zr
+         {ConvoluteIter Xr Zr B|Ws}
+      end
+   end
+in 
+   {ConvoluteIter Xs $ _}
+end
+
+declare
+{Browse {Convolute [2 4 6] [1 3 5]}}
+
