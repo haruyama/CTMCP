@@ -395,9 +395,26 @@ fun {Convolute Xs Ys}
       end
    end
 in 
-   {ConvoluteIter Xs $ _}
+   {ConvoluteIter Xs $ nil}
 end
 
 declare
 {Browse {Convolute [2 4 6] [1 3 5]}}
 
+declare
+fun {Convolute Xs Ys}
+   fun {ConvoluteIter Xs Zr}
+      case Xs
+      of nil then
+         Zr = Ys
+         nil 
+      [] X|Xr then Z in
+         X#Z| {ConvoluteIter Xr Z|Zr}
+      end
+   end
+in 
+   {ConvoluteIter Xs nil}
+end
+
+declare
+{Browse {Convolute [2 4 6] [1 3 5]}}
