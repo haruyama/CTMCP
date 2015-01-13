@@ -117,6 +117,7 @@ Zs=nil
 
 declare
 fun {Fib X}
+   {Delay 1000}
    if X=<2 then 1
    else thread {Fib X-1} end + {Fib X-2} end
 end

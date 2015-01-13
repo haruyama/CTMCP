@@ -109,15 +109,15 @@ X=[[1 2] 4 nil  [[5] 10]]
 {Browse {LengthL [X X]}}
 
 declare
-{Browse {IsList [1 2]}}
+{Browse {IsLis [1 2]}}
 {Browse {IsList 1}}
 
 declare
-fun {IsList X} X\=(_|_) end
+fun {Leaf X} X\=(_|_) end
 
 declare
-{Browse {IsList [1 2]}}
-{Browse {IsList 1}}
+{Browse {Leaf [1 2]}}
+{Browse {Leaf 1}}
 
 declare
 X=[[1 2] 4 nil  [[5] 10]]
@@ -317,12 +317,6 @@ end
 declare
 fun {IsEmpty q(_ S E)} S == E end
 
-local Q={NewCell {NewQueue}} in
-   {Browse {IsEmpty @Q}}
-   Q := {Insert @Q 1}
-   {Browse {IsEmpty @Q}}
-end
-
 local Q={NewCell {NewQueue}} X in
    {Browse {IsEmpty @Q}}
    Q := {Insert @Q X}
@@ -383,6 +377,15 @@ declare
 {Browse {Convolute [2 4 6] [1 3 5]}}
 
 % https://haskelladdict.wordpress.com/tag/danvy/
+
+>convolve :: [a] -> [b] -> [(a,b)]
+>convolve xs ys = fst . walk $ xs
+>  where
+>    walk []        = ([],ys)
+>    walk (a:as) = let (r, (b:bs)) = walk as
+>                  in
+>                     ((a,b):r, bs)
+
 
 declare
 fun {Convolute Xs Ys}

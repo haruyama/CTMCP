@@ -954,6 +954,8 @@ L=for I in 1..100 collect:C do
 
 {Browse L}
 
+for I in 1..10 do thread {Browse I} {Delay (10-I)*1000} {Browse I} end end
+
 % 3.6.4
 
 declare
@@ -1193,8 +1195,8 @@ declare
 T="Oh my darling, oh my darling, oh my darling, Clementine.
 She is lost and gone forever, oh my darling, Clementine"
 {Browse {WordFreq T}}
-%{Browse {CharsToWords nil T}}
-%{Browse {WordToAtom "abc"}}
+{Browse {CharsToWords nil T}}
+{Browse {WordToAtom "abc"}}
 
 % 3.7.5
 
