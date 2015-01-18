@@ -378,3 +378,143 @@ Y=0|1|0|_
 O in
 O={Latch X Y}
 {Browse inp(X Y)#out(O)}
+
+% 4.4
+
+% 4.5
+
+declare Y
+{ByNeed proc {$ A} A=111*111 end Y}
+{Browse Y}
+
+
+declare Y
+{ByNeed proc {$ A} A=111*111 end Y}
+Z=Y+1
+{Browse Y}
+
+declare X Y Z
+thread X={ByNeed fun {$} 3 end} end
+thread Y={ByNeed fun {$} 4 end} end
+thread Z=X+Y end
+{Browse Z}
+
+declare X Z
+thread X={ByNeed fun {$} {Browse x} 3 end} end
+thread X=2 end
+thread Z=X+4 end
+{Browse Z}
+
+declare X Y Z
+thread X={ByNeed fun {$} {Browse x} 3 end} end
+thread X=Y end
+thread if X==Y then Z=10 end end
+{Browse Z}
+
+declare
+fun lazy {Generate N} N| {Generate N+1} end
+L={Generate 0}
+{Browse L}
+{Browse L.2.2.1}
+
+declare
+fun {Generate N}
+   {ByNeed fun {$} N| {Generate N+1} end}
+end
+L={Generate 0}
+{Browse L}
+{Browse L.2.2.1}
+
+% mozart 2 ではうまく動かない? (2015/01/18)
+local
+   Z
+   fun lazy {F1 X} X+Z end
+   fun lazy {F2 Y} Z=1 Y+Z end
+in
+   {Browse {F1 1} + {F2 2}}
+end
+
+local
+   Z
+   fun lazy {F1 X} X+Z end
+   fun {F2 Y} Z=1 Y+Z end
+in
+   {Browse {F1 1} + {F2 2}}
+end
+
+local
+   Z
+   fun lazy {F1 X} X+Z end
+   fun lazy {F2 Y} Z=1 Y+Z end
+in
+   {Browse {F2 2}+{F1 1}}
+end
+
+% 4.5.3
+
+declare
+fun lazy {Generate N}
+   N|{Generate N+1}
+end
+fun {Sum Xs A Limit}
+   if Limit>0 then
+      case Xs of X|Xr then
+         {Sum Xr A+X Limit-1}
+      end
+   else A end
+end
+local Xs S in
+   Xs={Generate 0}
+   S={Sum Xs 0 150000}
+   {Browse S}
+end
+   
+local Xs S1 S2 S3 in
+   Xs={Generate 0}
+   thread S1={Sum Xs 0 150000} end
+   thread S2={Sum Xs 0 100000} end
+   thread S3={Sum Xs 0 50000} end
+   {Browse S1}
+   {Browse S2}
+   {Browse S3}
+end
+   
+% 4.5.4
+
+fun {Buffer1 In N}
+   End={List.drop In N}
+   fun lazy {Loop In End}
+      case In of I|In2 then
+         I|{Loop In2 End.2}
+      end
+   end
+in
+   {Loop In End}
+end
+
+declare
+fun {Buffer2 In N}
+   End=thread {List.drop In N} end
+   fun lazy {Loop In End}
+      case In of I|In2 then
+         I|{Loop In2 thread End.2 end}
+      end
+   end
+in
+   {Loop In End}
+end
+
+declare
+fun lazy {Ints N}
+   {Delay 1000}
+   N| {Ints N+1}
+end
+
+declare
+In={Ints 1}
+Out={Buffer2 In 5}
+{Browse Out}
+{Browse Out.1}
+{Browse Out.2.2.2.2.2.2.2.2.2.2}
+
+% 4.5.6
