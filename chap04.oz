@@ -373,11 +373,11 @@ in
 end
 
 declare
-X=1|0|0|_
-Y=0|1|0|_
+C= 1|1|0|0|1|_
+DI=0|1|0|1|0|_
 O in
-O={Latch X Y}
-{Browse inp(X Y)#out(O)}
+O={Latch C DI}
+{Browse inp(C DI)#out(O)}
 
 % 4.4
 
