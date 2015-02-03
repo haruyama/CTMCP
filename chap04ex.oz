@@ -26,7 +26,7 @@ fun {Fib X}
 end
 fun {ConcurrentFib X}
    if X =< 2 then 1
-   else thread {Fib X-1} end + {Fib X-2} end
+   else thread {ConcurrentFib X-1} end + {ConcurrentFib X-2} end
 end
 fun {ElapsedTime P Size}
    Start={Time.time} Fin Result
@@ -36,8 +36,8 @@ in
    Fin-Start
 end
 
-%{Browse {ElapsedTime Fib 40}}
-%{Browse {ElapsedTime ConcurrentFib 40}}
+%{Browse {ElapsedTime Fib 30}}
+%{Browse {ElapsedTime ConcurrentFib 30}}
 
 % 4
 
@@ -64,14 +64,19 @@ D=C+1
 % https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer7.oz
 
 declare
-proc {DGenerate N ?Xs}
-   NewXs
-   fun{F2}
-      {DGenerate N+1 NewXs}
-      NewXs
-   end
-in
-   Xs=N#F2
+% proc {DGenerate N ?Xs}
+%    NewXs
+%    fun{F2}
+%       {DGenerate N+1 NewXs}
+%       NewXs
+%    end
+% in
+%    Xs=N#F2
+% end
+fun {DGenerate N}
+   N # fun {$}
+          {DGenerate N+1}
+       end
 end
 fun {DSum Xs ?A Limit}
    if Limit>0 then
@@ -83,7 +88,8 @@ fun {DSum Xs ?A Limit}
    end
 end
 local Xs S in
-   {DGenerate 0 Xs}
+   % {DGenerate 0 Xs}
+   Xs={DGenerate 0}
    S={DSum Xs 0 3}
    {Browse S}
 end
