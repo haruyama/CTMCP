@@ -518,3 +518,210 @@ Out={Buffer2 In 5}
 {Browse Out.2.2.2.2.2.2.2.2.2.2}
 
 % 4.5.6
+
+declare
+fun lazy {Times N H}
+   case H of X|H2 then N*X|{Times N H2} end
+end
+
+fun lazy {Merge Xs Ys}
+   case Xs#Ys of (X|Xr)#(Y|Yr) then
+      if X<Y then X|{Merge Xr Ys}
+      elseif X>Y then Y|{Merge Xs Yr}
+      else X|{Merge Xr Yr}
+      end
+   end
+end
+
+H=1|{Merge {Times 2 H}
+           {Merge {Times 3 H}
+                  {Times 5 H}}}
+{Browse H}
+
+proc {Touch N H}
+   if N>0 then {Touch N-1 H.2} else skip end
+end
+{Touch 20 H}
+
+% 4.5.7
+
+declare
+fun lazy {LAppend As Bs}
+   case As
+   of nil then Bs
+   [] A|Ar then A| {LAppend Ar Bs}
+   end
+end
+
+L={LAppend "foo" "bar"}
+{Browse L}
+{Touch 4 L}
+
+declare
+fun lazy {MakeLazy Ls}
+   case Ls
+   of X|Lr then X| {MakeLazy Lr}
+   else nil end
+end
+L={LAppend "foo" {MakeLazy "bar"}}
+{Browse L}
+{Touch 4 L}
+
+declare
+fun lazy {LMap Xs F}
+   case Xs
+   of nil then nil
+   [] X|Xr then {F X}|{LMap Xr F}
+   end
+end
+
+declare
+fun {LFrom I J}
+   fun lazy {LFromLoop I}
+      if I>J then nil else I|{LFromLoop I+1} end
+   end
+   fun lazy {LFromInf I} I| {LFromInf I+1} end
+in
+   if J==inf then {LFromInf I} else {LFromLoop I} end
+end
+
+declare
+fun {LFlatten Xs}
+   fun lazy {LFlattenD Xs E}
+      case Xs
+      of nil then E
+      [] X|Xr then
+         {LFlattenD X {LFlattenD Xr E}}
+      [] X then X|E
+      end
+   end
+in
+   {LFlattenD Xs nil}
+end
+
+declare
+fun {LReverse S}
+   fun lazy {Rev S R}
+      case S
+      of nil then R
+      [] X|S2 then {Rev S2 X|R} end
+   end
+in {Rev S nil} end
+
+L={LReverse [a b c]}
+{Browse L}
+{Touch 1 L}
+
+declare
+fun lazy {LFilter L F}
+   case L
+   of nil then nil
+   [] X|L2 then
+      if {F X} then X|{LFilter L2 F} else {LFilter L2 F} end
+   end
+end
+
+% 4.5.8.1
+
+declare
+fun {NewQueue} q(0 nil 0 nil) end
+
+fun {Check Q}
+   case Q of q(LenF F LenR R) then
+      if LenF >=LenR then Q
+      else q(LenF+LenR {LAppend F {fun lazy {$} {Reverse R} end}} 0 nil)
+      end
+   end
+end
+
+fun {Insert Q X}
+   case Q of q(LenF F LenR R) then
+      {Check q(LenF F LenR+1 X|R)}
+   end
+end
+
+fun {Delete Q X}
+   case Q of q(LenF F LenR R) then F1 in
+      F=X|F1 {Check q(LenF-1 F1 LenR R)}
+   end
+end
+
+% 4.5.8.2
+
+declare
+fun lazy {LAppRev F R B}
+   case F#R
+   of nil#[Y] then Y|B
+   [] (X|F2)#(Y|R2) then X|{LAppRev F2 R2 Y|B}
+   end
+end
+
+declare
+fun {Check Q}
+   case Q of q(LenF F LenR R) then
+      if LenF>=LenR then Q
+      else q(LenF+LenR {LAppend F {LAppRev F R nil}} 0 nil)
+      end
+   end
+end
+
+% 4.5.9
+
+declare
+fun {From I J}
+   fun {FromLoop I}
+      if I>J then nil else I|{FromLoop I+1} end
+   end
+in
+   {FromLoop I}
+end
+Z={Map {From 1 10} fun {$ X} X#X end}
+{Browse Z}
+
+declare
+Z={LMap {LFrom 1 10} fun {$ X} X#X end}
+{Browse Z}
+{Touch 5 Z}
+
+declare
+Z={LFlatten
+   {LMap {LFrom 1 10} fun {$ X}
+                         {LMap {LFrom 1 X} fun {$ Y}
+                                              X#Y
+                                           end}
+  end}}
+{Browse Z}
+{Touch 5 Z}
+
+declare
+fun {FMap L F}
+   {LFlatten {LMap L F}}
+end
+Z={FMap {LFrom 1 10} fun {$ X}
+                        {LMap {LFrom 1 X} fun {$ Y}
+                                             X#Y
+                        end}
+  end}
+{Browse Z}
+{Touch 5 Z}
+
+declare
+Z={LFilter {FMap {LFrom 1 10} fun {$ X}
+                 {LMap {LFrom 1 10} fun {$ Y}
+                       X#Y
+                       end}
+                              end}
+   fun {$ X#Y} X+Y=<10 end}
+{Browse Z}
+{Touch 20 Z}
+
+declare
+Z={FMap {LFrom 1 10} fun {$ X}
+                        {LMap {LFrom 1 10-X} fun {$ Y}
+                                             X#Y
+                        end}
+  end}
+{Browse Z}
+{Touch 20 Z}
+
+% 4.6
