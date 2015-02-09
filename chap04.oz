@@ -382,7 +382,19 @@ O={Latch C DI}
 % 4.4
 
 % 4.5
+declare
+fun lazy {F1 X} 1+X*(3+X*(3+X)) end
+fun lazy {F2 X} Y=X*X in Y*Y end
+fun lazy {F3 X} (X+1)*(X+1) end
+A={F1 10}
+B={F2 20}
+C={F3 30}
+D=A+B
+{Browse A#B#C#D}
 
+% C は未定義のまま
+
+% 4.5.1
 declare Y
 {ByNeed proc {$ A} A=111*111 end Y}
 {Browse Y}
@@ -425,7 +437,15 @@ L={Generate 0}
 {Browse L}
 {Browse L.2.2.1}
 
-% mozart 2 ではうまく動かない? (2015/01/18)
+% 4.5.2
+
+declare X
+thread X={fun lazy {$} 11*11 end} end
+thread {Wait X} end
+{Browse X}
+
+% mozart 2 では表示されない (2015/01/18)
+% mozart 2 は引数を直列に計算しているようにみえる...
 local
    Z
    fun lazy {F1 X} X+Z end
@@ -434,6 +454,15 @@ in
    {Browse {F1 1} + {F2 2}}
 end
 
+local
+   Z
+   fun lazy {F1 X} {Browse x} _=X+Z {Browse y} X+Z end
+   fun lazy {F2 Y} Z=1 Y+Z end
+in
+   {Browse {F1 1} + {F2 2}}
+end
+
+% mozart 2 で表示される (2015/01/18)
 local
    Z
    fun lazy {F1 X} X+Z end
@@ -444,14 +473,21 @@ end
 
 local
    Z
+   fun {F1 X} thread X+Z end end 
+   fun {F2 Y} thread Z=1 Y+Z end end
+in
+   {Browse {F1 1} + {F2 2}}
+end
+
+local
+   Z
    fun lazy {F1 X} X+Z end
    fun lazy {F2 Y} Z=1 Y+Z end
 in
-   {Browse {F2 2}+{F1 1}}
+   {Browse {F2 2} + {F1 1}}
 end
 
 % 4.5.3
-
 declare
 fun lazy {Generate N}
    N|{Generate N+1}
@@ -480,7 +516,6 @@ local Xs S1 S2 S3 in
 end
    
 % 4.5.4
-
 fun {Buffer1 In N}
    End={List.drop In N}
    fun lazy {Loop In End}
@@ -518,7 +553,27 @@ Out={Buffer2 In 5}
 {Browse Out.2.2.2.2.2.2.2.2.2.2}
 
 % 4.5.6
+% ozc -c File.oz
+declare [File]={Module.link ['File.ozf']}
+fun {ReadListLazy FN}
+   {File.readOpen FN}
+   fun lazy {ReadNext}
+      L T I in
+      {File.readBlock I L T}
+      if I == 0 then T=nil {File.readClose}
+      else T={ReadNext} end
+      L
+   end
+in
+   {ReadNext}
+end
 
+declare
+L1={ReadListLazy "chap04.oz"}
+{Browse L1}
+{Wait L1}
+
+% 4.5.6
 declare
 fun lazy {Times N H}
    case H of X|H2 then N*X|{Times N H2} end
@@ -576,6 +631,11 @@ fun lazy {LMap Xs F}
 end
 
 declare
+L={LMap [1 2 3] fun {$ X} X*2 end}
+{Browse L}
+{Touch 2 L}
+
+declare
 fun {LFrom I J}
    fun lazy {LFromLoop I}
       if I>J then nil else I|{LFromLoop I+1} end
@@ -599,6 +659,10 @@ in
    {LFlattenD Xs nil}
 end
 
+L={LFlatten [1 2 [3 4] 5]}
+{Browse L}
+{Touch 3 L}
+
 declare
 fun {LReverse S}
    fun lazy {Rev S R}
@@ -621,8 +685,13 @@ fun lazy {LFilter L F}
    end
 end
 
-% 4.5.8.1
+L={LFilter [1 2 3 4 5] fun {$ X} X\=3 end}
+{Browse L}
+{Touch 3 L}
 
+% 4.5.8
+
+% 4.5.8.1
 declare
 fun {NewQueue} q(0 nil 0 nil) end
 
@@ -646,6 +715,17 @@ fun {Delete Q X}
    end
 end
 
+local Q={NewCell {NewQueue}} X Y in
+   Q := {Insert @Q 1}
+   Q := {Insert @Q 2}
+   {Browse @Q}
+   Q := {Delete @Q X}
+   {Browse X}
+   Q := {Delete @Q Y}
+   {Browse Y}
+end
+
+
 % 4.5.8.2
 
 declare
@@ -664,6 +744,8 @@ fun {Check Q}
       end
    end
 end
+
+% 問題 20
 
 % 4.5.9
 
