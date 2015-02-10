@@ -422,6 +422,7 @@ thread X={ByNeed fun {$} {Browse x} 3 end} end
 thread X=Y end
 thread if X==Y then Z=10 end end
 {Browse Z}
+Y=5
 
 declare
 fun lazy {Generate N} N| {Generate N+1} end
@@ -457,7 +458,7 @@ end
 local
    Z
    fun lazy {F1 X} {Browse x} _=X+Z {Browse y} X+Z end
-   fun lazy {F2 Y} Z=1 Y+Z end
+   fun lazy {F2 Y} {Browse z} Z=1 Y+Z end
 in
    {Browse {F1 1} + {F2 2}}
 end
@@ -552,7 +553,7 @@ Out={Buffer2 In 5}
 {Browse Out.1}
 {Browse Out.2.2.2.2.2.2.2.2.2.2}
 
-% 4.5.6
+% 4.5.5
 % ozc -c File.oz
 declare [File]={Module.link ['File.ozf']}
 fun {ReadListLazy FN}
@@ -593,6 +594,7 @@ H=1|{Merge {Times 2 H}
                   {Times 5 H}}}
 {Browse H}
 
+declare
 proc {Touch N H}
    if N>0 then {Touch N-1 H.2} else skip end
 end
@@ -610,6 +612,7 @@ end
 
 L={LAppend "foo" "bar"}
 {Browse L}
+{Touch 2 L}
 {Touch 4 L}
 
 declare
