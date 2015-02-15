@@ -59,6 +59,40 @@ D=C+1
 % https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer5.mkd
 
 % 6
+% 4.3.1
+declare
+fun {Generate N Limit}
+   if N<Limit then
+      N| {Generate N+1 Limit}
+   else nil end
+end
+
+fun {Sum Xs A}
+   case Xs
+   of X|Xr then {Sum Xr A+X}
+   [] nil then A
+   end
+end
+
+local Xs S in
+   thread Xs = {Generate 0 150000} end
+   thread S = {Sum Xs 0} end
+   {Browse S}
+end
+
+declare
+fun {Skip Xs}
+   if {IsDet Xs} then
+      case Xs of _|Xr then {Skip Xr}
+      [] nil then nil end
+   else Xs end
+end
+
+local Xs S in
+   thread Xs = {Generate 0 150000} end
+   thread S = {Sum {Skip Xs} 0} end
+   {Browse S}
+end
 
 % 7
 % https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer7.oz
@@ -211,3 +245,127 @@ thread X={MakeX} end
 thread Y={MakeY} end
 thread Z={MakeZ} end
 {Browse {FoldL Ls fun{$ X Y} thread X+Y end end 0}}
+
+% 10
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer10.mkd
+
+% 11
+
+% 2015/02 の mozart2 の実装では期待通りに動かない模様
+declare
+fun lazy {MakeX} {Browse x} {Delay 3000} 1 end
+fun lazy {MakeY} {Browse y} {Delay 6000} 2 end
+fun lazy {MakeZ} {Browse z} {Delay 9000} 3 end
+X={MakeX}
+Y={MakeY}
+Z={MakeZ}
+{Browse (X+Y)+Z}
+%{Browse thread X+Y end +Z}
+%{Browse X + thread Y + Z end}
+%{Browse {FoldL [X Y Z] fun {$ X Y} thread X+Y end end 0}}
+
+% 12
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer12.mkd
+
+% 13
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer13.mkd
+
+% 14
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer14.mkd
+
+% 15
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer15.oz
+
+% 16
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer16.oz
+
+% 17
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer17.oz
+
+declare
+fun lazy {LFilter Xs F}
+   case Xs
+   of nil then nil
+   [] X|Xr then if {F X} then X|{LFilter Xr F} else {LFilter Xr F} end
+   end
+end
+fun lazy {Generate N}
+   N|{Generate N+1}
+end
+fun {Sieve Xs N}
+   if N == 0 then nil
+   else
+      case Xs of X|Xr then Ys in
+         Ys = {LFilter Xr fun {$ Y} Y mod X \= 0 end}
+         X|{Sieve Ys N-1}
+      end
+   end
+end
+fun {GetPrimes N}
+   {Sieve {Generate 2} N}
+end
+% Tools
+declare
+proc {Touch N H}
+   if N>0 then {Touch N-1 H.2} else skip end
+end
+fun lazy {Times N H}
+   case H of X|H2 then N*X|{Times N H2} else nil end
+end
+fun lazy {Merge Xs Ys}
+   case Xs#Ys of (X|Xr)#(Y|Yr) then
+      if X<Y then X|{Merge Xr Ys}
+      elseif X>Y then Y|{Merge Xs Yr}
+      else X|{Merge Xr Yr}
+      end
+   end
+end
+fun {MergeN Hs}
+   case Hs
+   of H1|H2|nil then {Merge H1 H2}
+   [] H|Hr then {Merge H {MergeN Hr}}
+   end
+end
+% Main
+declare
+fun {Hamming N K}
+   Primes = {GetPrimes K}
+   H = 1|{MergeN {Map Primes fun{$ Prime} {Times Prime H} end}}
+in
+   {Touch N H}
+   H
+end
+{Browse {Hamming 30 3}}
+
+% 18
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer18.oz
+
+declare
+proc {TryFinally S1 S2}
+   B Y
+in
+   try {S1} B=false catch X then B=true Y=X end
+   {S2}
+   if B then raise Y end end
+end
+local U=1 V=2 in
+   {TryFinally
+    proc{$}
+       thread
+          {TryFinally proc{$} U=V end proc{$} {Browse bing} end}
+       end
+    end
+    proc{$} {Browse bong} end
+   }
+end
+
+% 手元ではすべて bong bing
+% bing bong もありえるはず
+
+% 19
+% https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer19.mkd
+
+% 20
+% http://www.kmonos.net/pub/Presen/PFDS.pdf
+
+
