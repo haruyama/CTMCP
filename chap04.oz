@@ -810,3 +810,64 @@ Z={FMap {LFrom 1 10} fun {$ X}
 {Touch 20 Z}
 
 % 4.6
+local
+   proc {Ping N}
+      if N==0 then {Browse 'ping terminated'}
+      else {Delay 500} {Browse ping} {Ping N-1} end
+   end
+   proc {Pong N}
+      {For 1 N 1
+       proc {$ I} {Delay 600} {Browse pong} end}
+      {Browse 'pong terminated'}
+   end
+in
+   {Browse 'game started'}
+   thread {Ping 50} end
+   thread {Pong 50} end
+end
+}
+% 4.6.2
+declare
+fun {NewTicker}
+   fun {Loop}
+%      X={OS.localTime}
+      X={Time.time}
+   in
+      {Delay 1000}
+      X|{Loop}
+   end
+in
+   thread {Loop} end
+end
+
+thread for X in {NewTicker} do {Browse X} end end
+
+declare
+fun {NewTicker2}
+   fun {Loop T}
+      T1={Time.time}
+   in
+      {Delay 900}
+      if T1\=T then T1|{Loop T1} else {Loop T1} end
+   end
+in
+   thread {Loop {Time.time}} end
+end
+
+thread for X in {NewTicker2} do {Browse X} end end
+
+declare
+fun {NewTicker3}
+   fun {Loop N}
+      T={Time.time}
+   in
+      if T>N then {Delay 900}
+      elseif T<N then {Delay 1100}
+      else {Delay 1000} end
+      N|{Loop N+1}
+   end
+in
+   thread {Loop {Time.time}} end
+end
+
+thread for X in {NewTicker3} do {Browse X} end end
