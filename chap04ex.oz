@@ -270,6 +270,34 @@ Z={MakeZ}
 % 13
 % https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer13.mkd
 
+declare
+fun lazy {Reverse1 S}
+    fun {Rev S R}
+        case S of nil then R
+        [] X|S2 then {Rev S2 X|R} end
+    end
+in
+    {Rev S nil}
+end
+
+fun lazy {Reverse2 S}
+    fun lazy {Rev S R}
+        case S of nil then R
+        [] X|S2 then {Rev S2 X|R} end
+    end
+in
+    {Rev S nil}
+end
+
+declare
+R1={Reverse1 [a b c]}
+{Browse R1}
+{Browse R1.1}
+
+R2={Reverse2 [a b c]}
+{Browse R2}
+{Browse R2.1}
+
 % 14
 % https://github.com/Altech/ctmcp-answers/blob/master/Section04/exer14.mkd
 
