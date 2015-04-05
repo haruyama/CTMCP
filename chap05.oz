@@ -597,3 +597,7 @@ in
      end}}
    {Close}
 end
+
+declare L
+{ConcFilter [1 2 3] Int.isOdd L}
+{Browse L}
