@@ -601,3 +601,35 @@ end
 declare L
 {ConcFilter [1 2 3] Int.isOdd L}
 {Browse L}
+
+% 5.8.1
+
+declare
+fun {StreamManager OutS1 OutS2}
+   case OutS1#OutS2
+   of (M|NewS1)#OutS2 then
+      M|{StreamManager NewS1 OutS2}
+   [] OutS1#(M|NewS2) then
+      M|{StreamManager OutS1 NewS2}
+   [] nil#OutS2 then
+      OutS2
+   [] OutS1#nil then
+      OutS1
+   end
+end
+
+declare
+fun {StreamManager OutS1 OutS2}
+   F={WaitTwo OutS1 OutS2}
+in
+   case F#OutS1#OutS2
+   of 1#(M|NewS1)#OutS2 then
+      M|{StreamManager OutS2 NewS1}
+   [] 2#OutS1#(M|NewS2) then
+      M|{StreamManager NewS2 OutS1}
+   [] 1#nil#OutS2 then
+      OutS2
+   [] 2#OutS1#nil then
+      OutS1
+   end
+end
