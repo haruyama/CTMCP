@@ -14,6 +14,7 @@ local S in
    thread {ForAll S Browse} end
 end
 {Send P hi}
+{Send P ho}
 
 % 5.2.1
 
@@ -41,7 +42,7 @@ fun {Player Others}
           Ran={OS.rand} mod {Width Others}+1
        in
           {Delay 1000}
-          % {Browse a}
+          {Browse Ran}
           {Send Others.Ran ball}
        end
     end}
@@ -176,6 +177,16 @@ local Y E in
       {Browse Y}
    end
 end
+
+
+local Y E in
+   {Send Server sqrt(~2.0 Y E)}
+   case E of exception(Exc) then raise Exc end
+   else
+      {Browse Y}
+   end
+end
+
 
 % 5.3.7
 declare 
