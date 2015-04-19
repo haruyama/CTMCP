@@ -89,7 +89,7 @@ end
 
 % a.
 
-題意が完全にはわからないが, よくない感じがある
+実装がそのままだと 制御装置にリフトごとの状態を複数持てるようなっていない
 
 % b.
 
@@ -119,10 +119,10 @@ fun {Controller Init}
               of step(Dest) then
                  if F==Dest then
                     state(stopped F Lid)
-                 elseif F<Dest then 
+                 elseif F<Dest then % change
                     {Send Tid starttimer(1000*(Dest-F) Cid)}
                     state(running Dest Lid)
-                 else % F>Dest
+                 else % F>Dest % change
                     {Send Tid starttimer(1000*(F-Dest) Cid)}
                     state(running Dest Lid)
                  end
@@ -208,7 +208,7 @@ fun {Lift Num Init Cid Floors}
                    {Send Cid step(Sched2.1)}
                    state(NewPos Sched2 true)
                 end
-%             else
+%             else % change
 %                {Send Cid step(S)}
 %                state(NewPos Sched Moving)
              end
@@ -255,9 +255,84 @@ declare F L in
 
 % 3
 
+大変っぽいのでパス
+
 % 4
 
+declare
+local
+   proc {ZeroExit N Is}
+      case Is of I|Ir then
+         if N+I\=0 then {ZeroExit N+I Ir} end
+      end
+   end
+in
+   proc {NewThread P ?SubThread}
+      Is Pt={NewPort Is}
+   in
+      proc {SubThread P}
+         {Send Pt 1}
+         thread
+            {P} {Send Pt ~1}
+         end
+      end
+      {SubThread P}
+      {ZeroExit 0 Is}
+   end
+end
+
+declare SubT
+{NewThread proc {$} {Browse a} end SubT}
+
+declare SubT
+{NewThread proc {$}
+              {SubT proc {$} {Browse a} end}
+              {SubT proc {$} {Browse b} end}
+           end SubT}
+
+
 % https://github.com/Altech/ctmcp-answers/blob/master/Section05/exer4.mkd
+% http://ctm-himanshu.blogspot.jp/2009/02/ch5-ex4.html
+
+declare
+local
+   proc {ZeroExit N Is}
+      case Is of I|Ir then
+         if N+I\=0 then {ZeroExit N+I Ir}
+         else % change
+            {Browse 'ZeroExit Finished'}
+         end
+      end
+   end
+in
+   proc {NewThread P ?SubThread}
+      Is Pt={NewPort Is}
+   in
+      proc {SubThread P}
+         thread
+            {Delay 1000} % change
+            {Send Pt 1} {P} {Send Pt ~1}
+         end
+      end
+      {SubThread P}
+      {ZeroExit 0 Is}
+   end
+end
+
+local SubThread in
+   {NewThread
+    proc {$}
+       {Browse 'T1 started'}
+       {SubThread
+        proc {$}
+           {Browse 'T2 started'} {Delay 2000}
+           {Browse 'T2 finished'}
+        end} %T2
+       {Browse 'T1 finished'}
+    end
+    SubThread}
+   {Browse 'NewThread Finished'}
+end
 
 % 5
 declare
@@ -316,3 +391,47 @@ A=3
 O(n)
 
 c でみるように ConcFilter は計算できるものは計算する
+
+% 8
+
+declare
+fun {StreamManager OutS1 OutS2}
+   F={WaitTwo OutS1 OutS2}
+in
+   case F#OutS1#OutS2
+   of 1#(M|NewS1)#OutS2 then
+      M|{StreamManager OutS2 NewS1}
+   [] 2#OutS1#(M|NewS2) then
+      M|{StreamManager NewS2 OutS1}
+   [] 1#nil#OutS2 then
+      OutS2
+   [] 2#OutS1#nil then
+      OutS1
+   end
+end
+
+declare
+fun {Replace InL A OldS NewS}
+   case InL
+   of B#S|L1 andthen A=B then
+      OldS=S
+      A#NewS|L1
+   [] E|L1 then
+      E|{Replace L1 A OldS NewS}
+   end
+end
+
+proc {NameServer NS L}
+   case NS
+   of register(A S)|NS1 then
+      {NameServer NS1 A#S|L}
+   [] getstream(A S)|NS1 then L1 OldS NewS in
+      L1={Replace L A OldS NewS}
+      thread {StreamManager S NewS OldS} end
+      {NameServer NS1 L1}
+   [] nil then
+      skip
+   end
+end
+
+% NameServer 自体に名前を付けられない
