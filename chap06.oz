@@ -373,3 +373,167 @@ in
 end
 declare C R in
 C={Revocable {NewCollector} R}
+
+% 6.5
+
+declare
+fun {NewExtensibleArray L H Init}
+   A={NewCell {NewArray L H Init}}#Init
+   proc {CheckOverflow I}
+      Arr=@(A.1)
+      Low={Array.low Arr}
+      High={Array.high Arr}
+   in
+      if I>High then
+         High2=Low+{Max I 2*(High-Low)}
+         Arr2={NewArray Low High2 A.2}
+      in
+         for K in Low..High do Arr2.K:=Arr.K end
+         (A.1):=Arr2
+      end
+   end
+   proc {Put I X}
+      {CheckOverflow I}
+      @(A.1).I:=X
+   end
+   fun {Get I}
+      {CheckOverflow I}
+      @(A.1).I
+   end
+in extArray(get:Get put:Put)
+end
+
+declare
+A={NewExtensibleArray 1 10 3}
+{Browse {A.get 50}}
+{A.put 100 1}
+{Browse {A.get 100}}
+
+% 6.8.1
+
+declare
+fun {L2M GL}
+   M={Map GL fun {$ I#_} I end}
+   L={FoldL M Min M.1}
+   H={FoldL M Max M.1}
+   GM={NewArray L H unit}
+in
+   for I#NS in GL do
+      GM.I:={NewArray L H false}
+      for J in NS do GM.I.J:=true end
+   end
+   GM
+end
+fun {M2L GM}
+   L={Array.low GM}
+   H={Array.high GM}
+in
+   for I in L..H collect:C do
+      {C I#for J in L..H collect:D do
+              if GM.I.J then {D J} end
+           end}
+   end
+end
+
+{Browse {M2L {L2M [1#[2 3] 2#[1] 3#nil]}}}
+
+declare
+fun {Succ X G}
+   case G of Y#SY|G2 then
+      if X==Y then SY else {Succ X G2} end
+   end
+end
+
+fun {Union A B}
+   case A#B
+   of nil#B then B
+   [] A#nil then A
+   [] (X|A2)#(Y|B2) then
+      if X==Y then X|{Union A2 B2}
+      elseif X<Y then X|{Union A2 B}
+      elseif X>Y then Y|{Union A B2}
+      end
+   end
+end
+
+fun {DeclTrans G}
+   Xs={Map G fun {$ X#_} X end}
+in
+   {FoldL Xs
+    fun {$ InG X}
+       SX={Succ X InG} in
+       {Map InG
+        fun {$ Y#SY}
+           Y#if {Member X SY} then
+                {Union SY SX} else SY end
+        end}
+    end G}
+end
+
+{Browse {DeclTrans [1#[2 3] 2#[1] 3#nil]}}
+
+declare
+proc {StateTrans GM}
+   L={Array.low GM}
+   H={Array.high GM}
+in
+   for K in L..H do
+      for I in L..H do
+         if GM.I.K then
+            for J in L..H do
+               if GM.K.J then GM.I.J:=true end
+            end
+         end
+      end
+   end
+end
+
+declare GM in
+{StateTrans GM={L2M [1#[2 3] 2#[1] 3#nil]}}
+{Browse {M2L GM}}
+
+declare
+fun {DeclTrans2 GT}
+   H={Width GT}
+   fun {Loop K InG}
+      if K=<H then
+         G={MakeTuple g H} in
+         for I in 1..H do
+            G.I={MakeTuple g H}
+            for J in 1..H do
+               G.I.J = InG.I.J orelse (InG.I.K andthen InG.K.J)
+            end
+         end
+         {Loop K+1 G}
+      else InG end
+   end
+in
+   {Loop 1 GT}
+end
+
+{Browse {DeclTrans2 g(g(false true true) g(true false false) g(false false false))}}
+
+declare
+fun {DeclTrans2T GT}
+      H={Width GT}
+   fun {Loop K InG}
+      if K=<H then
+         G={MakeTuple g H} in
+         thread
+            for I in 1..H do
+               thread
+                  G.I={MakeTuple g H}
+                  for J in 1..H do
+                     G.I.J = InG.I.J orelse (InG.I.K andthen InG.K.J)
+                  end
+               end
+            end               
+         end
+         {Loop K+1 G}
+      else InG end
+   end
+in
+   {Loop 1 GT}
+end
+
+{Browse {DeclTrans2T g(g(false true true) g(true false false) g(false false false))}}
