@@ -537,3 +537,184 @@ in
 end
 
 {Browse {DeclTrans2T g(g(false true true) g(true false false) g(false false false))}}
+
+% 6.8.2
+
+declare
+fun {WordChar C}
+   (&a=<C andthen C=<&z) orelse
+   (&A=<C andthen C=<&Z) orelse (&0=<C andthen C=<&9)
+end
+fun {WordToAtom PW}
+   {StringToAtom {Reverse PW}}
+end
+fun {CharsToWords PW Cs}
+   case Cs
+   of nil andthen PW==nil then
+      nil
+   [] nil then
+      [{WordToAtom PW}]
+   [] C|Cr andthen {WordChar C} then
+      {CharsToWords {Char.toLower C}|PW Cr}
+   [] _|Cr andthen PW==nil then
+      {CharsToWords nil Cr}
+   [] _|Cr then
+      {WordToAtom PW}|{CharsToWords nil Cr}
+   end
+end
+Put=Dictionary.put
+CondGet=Dictionary.condGet
+proc {IncWord D W}
+   {Put D W {CondGet D W 0}+1}
+end
+proc {CountWords D Ws}
+   case Ws
+   of W|Wr then
+      {IncWord D W}
+      {CountWords D Wr}
+   [] nil then skip
+   end
+end
+fun {WordFreq Cs}
+   D={NewDictionary}
+in
+   {CountWords D {CharsToWords nil Cs}}
+   D
+end
+
+declare E
+T="Oh my darling, oh my darling, oh my darling, Clementine.
+She is lost and gone forever, oh my darling, Clementine"
+D={WordFreq T}
+{Browse {Dictionary.entries D}}
+{Browse {CharsToWords nil T}}
+{Browse {WordToAtom "abc"}}
+
+% 6.8.3
+
+declare
+local A=333667 B=213453321 M=1000000000 in
+   proc {NewRand ?Rand ?Init ?Max}
+      X={NewCell 0} in
+      fun {Rand} X:= (A*@X+B) mod M end
+      proc {Init Seed} X:=Seed end
+      Max=M
+   end
+end
+
+declare
+local A=333667 B=213453321 M=1000000000 in
+   fun lazy {RandList S0}
+      S1=(A*S0+B) mod M in S1|{RandList S1}
+   end
+end
+
+declare Rand Init Max in {NewRand Rand Init Max}
+
+declare
+FMax={IntToFloat Max}
+fun {Uniform}
+   {IntToFloat {Rand}}/FMax
+end
+
+fun {UniformI A B}
+   A+{FloatToInt {Floor {Uniform}*{IntToFloat B-A+1}}}
+end
+
+declare
+{Browse {Uniform}}
+{Browse {Uniform}}
+{Browse {UniformI 0 10}}
+{Browse {UniformI 0 10}}
+
+declare
+fun {Exponential Lambda}
+   ~{Log 1.0-{Uniform}}/Lambda
+end
+{Browse {Exponential 5.0}}
+{Browse {Exponential 5.0}}
+
+declare
+TwoPi=4.0*{Float.acos 0.0}
+fun {Gauss}
+   {Sqrt ~2.0*{Log {Uniform}}}*{Cos TwoPi*{Uniform}}
+end
+{Browse {Gauss}}
+{Browse {Gauss}}
+
+declare
+local GaussCell={NewCell nil} in
+   fun {Gauss}
+      Prev={Exchange GaussCell $ nil}
+   in
+      if Prev\=nil then Prev
+      else R Phi in
+         R={Sqrt ~2.0*{Log {Uniform}}}
+         Phi=TwoPi*{Uniform}
+         GaussCell:=R*{Cos Phi}
+         R*{Sin Phi}
+      end
+   end
+end
+{Browse {Gauss}}
+{Browse {Gauss}}
+
+% 6.8.4
+
+declare [File]={Module.link ['File.ozf']}
+N=10000 M=500000 T=200
+{Init 0}
+{File.writeOpen 'wordofmouth.txt'}
+proc {Out S}
+   {File.write {Value.toVirtualString S 10 10}#"\n"}
+end
+
+Sites={MakeTuple sites N}
+for I in 1..N do
+   Sites.I={Record.toDictionary
+            o(hits:0 performance:{IntToFloat {UniformI 1 80000}})}
+end
+
+Users={MakeTuple users M}
+for I in 1..M do S={UniformI 1 N} in
+   Users.I={Record.toDictionary o(currentSite:S)}
+   Sites.S.hits := Sites.S.hits +1
+end
+
+declare
+proc {UserStep I}
+   U=Users.I
+   L={List.map [{UniformI 1 M} {UniformI 1 M} {UniformI 1 M}]
+      fun {$ X}
+         {Users.X.currentSite} #
+         Sites.(Users.X.currentSite).performance + {Gauss}*{IntToFloat N}
+      end}
+   MS#MP={List.foldL L
+          fun {$ X1 X2} if X2.2 > X1.2 then X2 else X1 end end
+          U.currentSite #
+          Sites.(U.currentSite).performance +{Abs {Gauss}*{IntToFloat N}}}
+in
+   if MS\=U.currentSite then
+      Sites.(U.currentSite).hits := Sites.(U.currentSite).hits -1
+      U.currentSite := MS
+      Sites.MS.hits := Sites.MS.hits +1
+   end
+end
+
+for J in 1..N do
+   {Out {Record.adjoinAt
+         {Dictionary.toRecord site Sites.J} name J}}
+end
+{Out endOfRound(time:0 nonZeroSites:N)}
+for I in 1..T do X={NewCell 0} in
+   for U in 1..M do {UserStep U} end
+   for J in 1..N do H=Sites.J.hits in
+      if H\=0 then
+         {Out {Record.adjoinAt
+               {Dictionary.toRecord site Sites.J} name J}}
+         X:=@X+1
+      end
+   end
+   {Out endOfRound(time:I nonZeroSites:@X)}
+end
+{File.writeClose}
