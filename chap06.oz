@@ -718,3 +718,23 @@ for I in 1..T do X={NewCell 0} in
    {Out endOfRound(time:I nonZeroSites:@X)}
 end
 {File.writeClose}
+
+% 6.9.3
+
+% declare
+% fun {ReadListLazy FN}
+%    {File.readOpen FN}
+%    fun lazy {ReadNext}
+%       L T I in
+%       {File.readBlock I L T}
+%       if I==0 then T=nil {File.readClose} else T={ReadNext} end
+%       L
+%    end
+% in
+%    {Finalize.register F proc {$ F} {File.readClose} end}
+%    {ReadNext}
+% end
+
+%** variable F not introduced
+
+
