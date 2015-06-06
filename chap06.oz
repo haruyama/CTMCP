@@ -669,12 +669,14 @@ proc {Out S}
    {File.write {Value.toVirtualString S 10 10}#"\n"}
 end
 
+declare
 Sites={MakeTuple sites N}
 for I in 1..N do
    Sites.I={Record.toDictionary
             o(hits:0 performance:{IntToFloat {UniformI 1 80000}})}
 end
 
+declare
 Users={MakeTuple users M}
 for I in 1..M do S={UniformI 1 N} in
    Users.I={Record.toDictionary o(currentSite:S)}
@@ -687,12 +689,14 @@ proc {UserStep I}
    L={List.map [{UniformI 1 M} {UniformI 1 M} {UniformI 1 M}]
       fun {$ X}
          {Users.X.currentSite} #
-         Sites.(Users.X.currentSite).performance + {Gauss}*{IntToFloat N}
+         Sites.(Users.X.currentSite).performance
+         + {Gauss}*{IntToFloat N}
       end}
-   MS#MP={List.foldL L
-          fun {$ X1 X2} if X2.2 > X1.2 then X2 else X1 end end
-          U.currentSite #
-          Sites.(U.currentSite).performance +{Abs {Gauss}*{IntToFloat N}}}
+
+   MS#MP = {List.foldL L
+            fun {$ X1 X2} if X2.2 > X1.2 then X2 else X1 end end
+            U.currentSite #
+            Sites.(U.currentSite).performance +{Abs {Gauss}*{IntToFloat N}}}
 in
    if MS\=U.currentSite then
       Sites.(U.currentSite).hits := Sites.(U.currentSite).hits -1
