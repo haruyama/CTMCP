@@ -582,7 +582,7 @@ in
    D
 end
 
-declare E
+declare
 T="Oh my darling, oh my darling, oh my darling, Clementine.
 She is lost and gone forever, oh my darling, Clementine"
 D={WordFreq T}
