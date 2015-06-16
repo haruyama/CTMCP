@@ -662,7 +662,8 @@ end
 % 6.8.4
 
 declare [File]={Module.link ['File.ozf']}
-N=10000 M=500000 T=200
+%N=10000 M=500000 T=200
+N=100 M=5000 T=2
 {Init 0}
 {File.writeOpen 'wordofmouth.txt'}
 proc {Out S}
@@ -686,6 +687,8 @@ end
 declare
 proc {UserStep I}
    U=Users.I
+
+   {Browse LL}
    L={List.map [{UniformI 1 M} {UniformI 1 M} {UniformI 1 M}]
       fun {$ X}
          {Users.X.currentSite} #
@@ -693,7 +696,7 @@ proc {UserStep I}
          + {Gauss}*{IntToFloat N}
       end}
 
-   MS#MP = {List.foldL L
+   MS#_ = {List.foldL L
             fun {$ X1 X2} if X2.2 > X1.2 then X2 else X1 end end
             U.currentSite #
             Sites.(U.currentSite).performance +{Abs {Gauss}*{IntToFloat N}}}
