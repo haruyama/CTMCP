@@ -280,3 +280,168 @@ C2={New Counter init(0)}
 local X in {C1 toChunk(X)} {C2 fromChunk(X)} end
 {C1 browse}
 {C2 browse}
+
+% 7.4
+
+declare
+class Account
+   attr balance:0
+   meth init skip end
+   meth transfer(Amt)
+      balance:=@balance+Amt
+   end
+   meth getBalance(Bal)
+      Bal=@balance
+   end
+   meth batchTransfer(AmtList)
+      for A in AmtList do {self transfer(A)} end
+   end
+end
+
+class VerboseAccount from Account
+   meth verboseTransfer(Amt)
+      {self transfer(Amt)}
+      {Browse 'Balance:'#@balance}
+   end
+end
+
+class AccountWithFee from VerboseAccount
+   attr fee:5
+   meth transfer(Amt)
+      VerboseAccount,transfer(Amt-@fee)
+   end
+end
+
+declare B B2
+A={New AccountWithFee init}
+%A={New VerboseAccount init}
+{A getBalance(B)}
+{Browse B}
+{A transfer(10)}
+{A getBalance(B2)}
+{Browse B2}
+
+% 7.4.2
+
+declare
+class ListClass
+   meth isNil(_) raise undefinedMethod end end
+   meth append(_ _) raise undefinedMethod end end
+   meth display raise undefinedMethod end end
+end
+
+class NilClass from ListClass
+   meth init skip end
+   meth isNil(B) B=true end
+   meth append(T U) U=T end
+   meth display {Browse nil} end
+end
+
+class ConsClass from ListClass
+   attr head tail
+   meth init(H T) head:=H tail:=T end
+   meth isNil(B) B=false end
+   meth append(T U)
+      U2={@tail append(T $)}
+   in
+      U={New ConsClass init(@head U2)}
+   end
+   meth display {Browse @head} {@tail display} end
+end
+
+declare
+L1={New ConsClass
+    init(1 {New ConsClass
+            init(2 {New NilClass init})})}
+L2={New ConsClass init(3 {New NilClass init})}
+L3={L1 append(L2 $)}
+{L3 display}
+
+% 7.4.3
+
+declare
+class GenericSort
+   meth init skip end
+   meth qsort(Xs Ys)
+      case Xs
+      of nil then Ys=nil
+      [] P|Xr then S L in
+         {self partition(Xr P S L)}
+         {Append {self qsort(S $)}
+          P|{self qsort(L $)} Ys }
+      end
+   end
+   meth partition(Xs P Ss Ls)
+      case Xs
+      of nil then Ss=nil Ls=nil
+      [] X|Xr then Sr Lr in
+         if {self less(X P $)} then
+            Ss=X|Sr Ls=Lr
+         else
+            Ss=Sr Ls=X|Lr
+         end
+         {self partition(Xr P Sr Lr)}
+      end
+   end
+end
+
+declare
+class IntegerSort from GenericSort
+   meth less(X Y B)
+      B=(X<Y)
+   end
+end
+
+class RationalSort from GenericSort
+   meth less(X Y B)
+      '/'(P Q)=X
+      '/'(R S)=Y
+   in B=(P*S<Q*R) end
+end
+
+declare
+ISort={New IntegerSort init}
+RSort={New RationalSort init}
+{Browse {ISort qsort([1 2 5 3 4] $)}}
+{Browse {RSort qsort(['/'(23 3) '/'(34 11) '/'(47 17)] $)}}
+
+declare
+fun {MakeSort Less}
+   class $
+      meth init skip end
+      meth qsort(Xs Ys)
+         case Xs
+         of nil then Ys=nil
+         [] P|Xr then S L in
+            {self partition(Xr P S L)}
+            {Append {self qsort(S $)}
+             P|{self qsort(L $)} Ys }
+         end
+      end
+      meth partition(Xs P Ss Ls)
+         case Xs
+         of nil then Ss=nil Ls=nil
+         [] X|Xr then Sr Lr in
+            if {Less X P} then   %...
+               Ss=X|Sr Ls=Lr
+            else
+               Ss=Sr Ls=X|Lr
+            end
+            {self partition(Xr P Sr Lr)}
+         end
+      end
+   end
+end
+
+declare
+IntegerSort={MakeSort fun {$ X Y} X<Y end}
+RationalSort={MakeSort fun {$ X Y}
+                          '/'(P Q) = X
+                          '/'(R S) = Y
+                          in P*S<Q*R end}
+
+declare
+ISort={New IntegerSort init}
+RSort={New RationalSort init}
+{Browse {ISort qsort([1 2 5 3 4] $)}}
+{Browse {RSort qsort(['/'(23 3) '/'(34 11) '/'(47 17)] $)}}
