@@ -445,3 +445,170 @@ ISort={New IntegerSort init}
 RSort={New RationalSort init}
 {Browse {ISort qsort([1 2 5 3 4] $)}}
 {Browse {RSort qsort(['/'(23 3) '/'(34 11) '/'(47 17)] $)}}
+
+% 7.4.4
+
+declare
+class Figure
+   meth otherwise(M)
+      raise undefinedMethod end
+   end
+end
+
+declare
+class Line from Figure
+   attr canvas x1 y1 x2 y2
+   meth init(Can X1 Y1 X2 Y2)
+      canvas:=Can
+      x1:=X1 y1:=Y1
+      x2:=X2 y2:=Y2
+   end
+   meth move(X Y)
+      x1:=@x1+X y1:=@y1+Y
+      x2:=@x2+X y2:=@y2+Y
+   end
+   meth display
+      {@canvas create(line @x1 @y1 @x2 @y2)}
+   end
+end
+
+declare
+class Circle from Figure
+   attr canvas x y r
+   meth init(Can X Y R)
+      canvas:=Can
+      x:=X y:=Y r:=R
+   end
+   meth move(X Y)
+      x:=@x+X y:=@y+Y
+   end
+   meth display
+      {@canvas create(oval @x-@r @y-@r @x+@r @y+@r)}
+   end
+end
+
+declare
+class LinkedList
+   attr elem next
+   meth init(elem:E<=null next:N<=null)
+      elem:=E next:=N
+   end
+   meth add(E)
+      next:={New LinkedList init(elem:E next:@next)}
+   end
+   meth forall(M)
+      if @elem\=null then {@elem M} end
+      if @next\=null then {@next forall(M)} end
+   end
+end
+
+declare
+class CompositeFigure from Figure LinkedList
+   meth init
+      LinkedList,init
+   end
+   meth move(X Y)
+      {self forall(move(X Y))}
+   end
+   meth display
+      {self forall(display)}
+   end
+end
+
+declare [QTk]={Module.link ['x-oz://system/wp/QTk.ozf']}
+W=250 H=150 Can
+Wind={QTk.build td(title:"Simple graphics package"
+                   canvas(width:W height:H bg:white
+                          handle:Can))}
+{Wind show}
+
+declare
+F1={New CompositeFigure init}
+{F1 add({New Line init(Can 50 50 150 50)})}
+{F1 add({New Line init(Can 150 50 100 125)})}
+{F1 add({New Line init(Can 100 125 50 50)})}
+{F1 add({New Circle init(Can 100 75 20)})}
+{F1 display}
+
+for I in 1..10 do {F1 move(3 ~2)} {F1 display} end
+
+
+declare
+class CompositeFigure from Figure
+   attr figlist
+   meth init
+      figlist:={New LinkedList init}
+   end
+   meth add(F)
+      {@figlist add(F)}
+   end
+   meth move(X Y)
+      {@figlist forall(move(X Y))}
+   end
+   meth display
+      {@figlist forall(display)}
+   end
+end
+
+declare [QTk]={Module.link ['x-oz://system/wp/QTk.ozf']}
+W=250 H=150 Can
+Wind={QTk.build td(title:"Simple graphics package"
+                   canvas(width:W height:H bg:white
+                          handle:Can))}
+{Wind show}
+
+declare
+F1={New CompositeFigure init}
+{F1 add({New Line init(Can 50 50 150 50)})}
+{F1 add({New Line init(Can 150 50 100 125)})}
+{F1 add({New Line init(Can 100 125 50 50)})}
+{F1 add({New Circle init(Can 100 75 20)})}
+{F1 display}
+
+for I in 1..10 do {F1 move(3 ~2)} {F1 display} end
+
+% 7.4.7
+declare
+class Leaf
+   meth init skip end
+end
+
+declare
+class Composite
+   attr children
+   meth init
+      children:=nil
+   end
+   meth add(E)
+      children:=E|@children
+   end
+   meth otherwise(M)
+      for N in @children do {N M} end
+   end
+end
+
+declare
+N0={New Composite init}
+L1={New Leaf init} {N0 add(L1)}
+L2={New Leaf init} {N0 add(L2)}
+N3={New Composite init} {N0 add(N3)}
+L4={New Leaf init} {N0 add(L4)}
+L5={New Leaf init} {N3 add(L5)}
+L6={New Leaf init} {N3 add(L6)}
+L7={New Leaf init} {N3 add(L7)}
+
+declare
+class Composite
+   attr children valid
+   meth init(Valid)
+      children:=nil
+      @valid=Valid
+   end
+   meth add(E)
+      if {Not {@valid E}} then raise invalidNode end end
+      children:=E|@children
+   end
+   meth otherwise(M)
+      for N in @children do {N M} end
+   end
+end
