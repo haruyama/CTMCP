@@ -89,6 +89,8 @@ in C end
 % C1={New C init}
 % {Browse {C1 foo($)}}
 
+% 7.3.2
+
 declare
 class Account
    attr balance:0
@@ -102,6 +104,31 @@ class Account
       for A in AmtList do {self transfer(A)} end
    end
 end
+
+declare
+class AccountLog
+   meth init skip end
+   meth addentry(Msg)
+      {Browse Msg}
+   end
+end
+LogObj = {New AccountLog init}
+
+declare
+class LoggedAccount from Account
+   meth transfer(Amt)
+      {LogObj addentry(transfer(Amt))}
+      Account,transfer(Amt)
+   end
+end
+
+declare
+LogAct={New LoggedAccount transfer(100)}
+{LogAct batchTransfer([10 200 3000])}
+
+% 7.3.3
+
+
 
 % 7.3.4
 
@@ -132,6 +159,8 @@ Obj1={NewF C1 init}
 Obj2={NewF C2 init}
 {Obj2 setForward(Obj1)}
 {Browse {Obj2 cube(10 $)}}
+
+{Browse {Obj2 square(10 $)}}
 % {Browse {Obj1 square(10 $)}} undefinedMethod
 
 declare
@@ -257,7 +286,10 @@ fun {TranceNew2 Class Init}
    end
 in  {New Tracer TInit} end
 
-
+declare
+Acc = {TraceNew Account transfer(100)}
+{Acc transfer(200)}
+{Browse {Acc getBal($)}}
 
 declare
 class Counter from ObjectSupport.reflect
