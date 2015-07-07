@@ -80,6 +80,18 @@ in C end
 {Browse {StrangeClass}}
 % Unresolved conflicts in class definition
 
+declare
+fun {StrangeClass}
+   class A meth foo(X) X=a end end
+   class B meth foo(X) X=b end end
+   class C from A B
+      meth foo(X)
+         A,foo(X)
+      end
+   end
+in C end
+{Browse {StrangeClass}}
+
 % declare
 % class A meth foo(?X) X=1 end end
 % class B meth foo(?X) X=2 end end
