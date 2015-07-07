@@ -247,7 +247,6 @@ class C2
       {@this inc(100)}
       {Browse c2#{@this get(i $)}}
    end
-   meth c {self browse} end
 end
 Obj2={NewD C2 init}
 {Obj2 setDelegate(Obj1)}
@@ -302,6 +301,7 @@ declare
 Acc = {TraceNew Account transfer(100)}
 {Acc transfer(200)}
 {Browse {Acc getBal($)}}
+{Acc batchTransfer([10 200 3000])}
 
 declare
 class Counter from ObjectSupport.reflect
