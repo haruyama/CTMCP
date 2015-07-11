@@ -656,3 +656,102 @@ class Composite
       for N in @children do {N M} end
    end
 end
+
+% 7.5
+
+% 7.5.2
+
+declare
+class Counter
+   attr val
+   meth init(Value)
+      val:=Value
+   end
+   meth browse
+      {Browse @val}
+   end
+   meth inc(Value)
+      val:=@val+Value
+   end
+end
+
+declare
+class Batcher
+   meth nil skip end
+   meth '|'(M Ms) {self M} {self Ms} end
+end
+
+declare
+C={New class $ from Counter Batcher end init(0)}
+{C [inc(2) browse inc(3) inc(4)]}
+{C browse}
+
+% 7.6
+
+% 7.6.2
+declare
+class Counter
+   attr val
+   meth init(Value)
+      val:=Value
+   end
+   meth browse
+      {Browse @val}
+   end
+   meth inc(Value)
+      val:=@val+Value
+   end
+end
+
+declare Wrap UnWrap
+proc {NewWrapper ?Wrap ?UnWrap}
+   Key={NewName} in
+   fun {Wrap X}
+      {Chunk.new w(Key:X)}
+   end
+   fun {UnWrap W}
+      try W.Key catch _ then raise error(unwrap(W)) end end
+   end
+end
+{NewWrapper Wrap UnWrap}
+
+declare Counter
+local
+   Attrs = [val]
+   MethodTable=m(browse:MyBrowse init:Init inc:Inc)
+   proc {Init M S Self}
+      init(Value)=M
+   in
+      (S.val):=Value
+   end
+   proc {Inc M S Self}
+      X
+      inc(Value)=M
+   in
+      X=@(S.val) (S.val) := X+Value
+   end
+   proc {MyBrowse M S Self}
+      browse=M
+      {Browse @(S.val)}
+   end
+in
+   Counter = {Wrap c(methods:MethodTable attrs:Attrs)}
+end
+
+declare
+fun {MyNew WClass InitialMethod}
+   State Obj Class={UnWrap WClass}
+in
+   State={MakeRecord s Class.attrs}
+   {Record.forAll State proc {$ A} {NewCell _ A} end}
+   proc {Obj M}
+      {Class.methods.{Label M} M State Obj}
+   end
+   {Obj InitialMethod}
+   Obj
+end
+
+declare
+C={MyNew Counter init(0)}
+{C inc(6)} {C inc(6)}
+{C browse}
