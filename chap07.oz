@@ -703,6 +703,8 @@ class Counter
    end
 end
 
+% 7.6.3
+
 declare Wrap UnWrap
 proc {NewWrapper ?Wrap ?UnWrap}
    Key={NewName} in
@@ -755,3 +757,26 @@ declare
 C={MyNew Counter init(0)}
 {C inc(6)} {C inc(6)}
 {C browse}
+
+% 7.6.4
+
+% declare
+% fun {From C1 C2 C3}
+%    c(methods:M1 attrs:A1)={UnWrap C1}
+%    c(methods:M2 attrs:A2)={UnWrap C2}
+%    c(methods:M3 attrs:A3)={UnWrap C3}
+%    MA1={Arity M1}
+%    MA2={Arity M2}
+%    MA3={Arity M3}
+%    ConfMeth={Minus {Inter MA2 MA3} MA1}
+%    ConfAttr={Minus {Inter A2 A3} A1}
+% in
+%    if ConfMeth\=nil then
+%       raise illegalInheritance(methConf:ConfMeth) end
+%    end
+%    if ConfAttr\=nil then
+%       raise illegalInheritance(attrConf:ConfAttr) end
+%    end
+%    {Wrap c(methods:{Adjoin {Adjoin M2 M3} M1}
+%     attrs:{Union {Union A2 A3} A1})}
+% end
