@@ -780,3 +780,44 @@ C={MyNew Counter init(0)}
 %    {Wrap c(methods:{Adjoin {Adjoin M2 M3} M1}
 %     attrs:{Union {Union A2 A3} A1})}
 % end
+
+% 7.8
+
+% 7.8.1
+
+declare
+class BallGame
+   attr other count:0
+   meth init(Other)
+      other:=Other
+   end
+   meth ball
+      count:=@count+1
+      {@other ball}
+   end
+   meth get(X)
+      X=@count
+   end
+end
+B1={NewActive BallGame init(B2)}
+B2={NewActive BallGame init(B1)}
+{B1 ball}
+
+declare X in
+{B1 get(X)}
+{Browse X}
+
+% 7.8.2
+
+declare
+fun {MyNewActive Class Init}
+   Obj={New Class Init}
+   P
+in
+   thread S in
+      {NewPort S P}
+      for M in S do {Obj M} end
+   end
+   proc {$ M} {Send P M} end
+end
+
