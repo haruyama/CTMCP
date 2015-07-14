@@ -656,3 +656,168 @@ class Composite
       for N in @children do {N M} end
    end
 end
+
+% 7.5
+
+% 7.5.2
+
+declare
+class Counter
+   attr val
+   meth init(Value)
+      val:=Value
+   end
+   meth browse
+      {Browse @val}
+   end
+   meth inc(Value)
+      val:=@val+Value
+   end
+end
+
+declare
+class Batcher
+   meth nil skip end
+   meth '|'(M Ms) {self M} {self Ms} end
+end
+
+declare
+C={New class $ from Counter Batcher end init(0)}
+{C [inc(2) browse inc(3) inc(4)]}
+{C browse}
+
+% 7.6
+
+% 7.6.2
+declare
+class Counter
+   attr val
+   meth init(Value)
+      val:=Value
+   end
+   meth browse
+      {Browse @val}
+   end
+   meth inc(Value)
+      val:=@val+Value
+   end
+end
+
+% 7.6.3
+
+declare Wrap UnWrap
+proc {NewWrapper ?Wrap ?UnWrap}
+   Key={NewName} in
+   fun {Wrap X}
+      {Chunk.new w(Key:X)}
+   end
+   fun {UnWrap W}
+      try W.Key catch _ then raise error(unwrap(W)) end end
+   end
+end
+{NewWrapper Wrap UnWrap}
+
+declare Counter
+local
+   Attrs = [val]
+   MethodTable=m(browse:MyBrowse init:Init inc:Inc)
+   proc {Init M S Self}
+      init(Value)=M
+   in
+      (S.val):=Value
+   end
+   proc {Inc M S Self}
+      X
+      inc(Value)=M
+   in
+      X=@(S.val) (S.val) := X+Value
+   end
+   proc {MyBrowse M S Self}
+      browse=M
+      {Browse @(S.val)}
+   end
+in
+   Counter = {Wrap c(methods:MethodTable attrs:Attrs)}
+end
+
+declare
+fun {MyNew WClass InitialMethod}
+   State Obj Class={UnWrap WClass}
+in
+   State={MakeRecord s Class.attrs}
+   {Record.forAll State proc {$ A} {NewCell _ A} end}
+   proc {Obj M}
+      {Class.methods.{Label M} M State Obj}
+   end
+   {Obj InitialMethod}
+   Obj
+end
+
+declare
+C={MyNew Counter init(0)}
+{C inc(6)} {C inc(6)}
+{C browse}
+
+% 7.6.4
+
+% declare
+% fun {From C1 C2 C3}
+%    c(methods:M1 attrs:A1)={UnWrap C1}
+%    c(methods:M2 attrs:A2)={UnWrap C2}
+%    c(methods:M3 attrs:A3)={UnWrap C3}
+%    MA1={Arity M1}
+%    MA2={Arity M2}
+%    MA3={Arity M3}
+%    ConfMeth={Minus {Inter MA2 MA3} MA1}
+%    ConfAttr={Minus {Inter A2 A3} A1}
+% in
+%    if ConfMeth\=nil then
+%       raise illegalInheritance(methConf:ConfMeth) end
+%    end
+%    if ConfAttr\=nil then
+%       raise illegalInheritance(attrConf:ConfAttr) end
+%    end
+%    {Wrap c(methods:{Adjoin {Adjoin M2 M3} M1}
+%     attrs:{Union {Union A2 A3} A1})}
+% end
+
+% 7.8
+
+% 7.8.1
+
+declare
+class BallGame
+   attr other count:0
+   meth init(Other)
+      other:=Other
+   end
+   meth ball
+      count:=@count+1
+      {@other ball}
+   end
+   meth get(X)
+      X=@count
+   end
+end
+B1={NewActive BallGame init(B2)}
+B2={NewActive BallGame init(B1)}
+{B1 ball}
+
+declare X in
+{B1 get(X)}
+{Browse X}
+
+% 7.8.2
+
+declare
+fun {MyNewActive Class Init}
+   Obj={New Class Init}
+   P
+in
+   thread S in
+      {NewPort S P}
+      for M in S do {Obj M} end
+   end
+   proc {$ M} {Send P M} end
+end
+
