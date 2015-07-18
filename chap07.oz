@@ -821,3 +821,192 @@ in
    proc {$ M} {Send P M} end
 end
 
+% 7.8.3
+
+declare
+class Victim
+   attr ident step last succ pred alive:true
+   meth init(I K L) ident:=I step:=K last:=L end
+   meth setSucc(S) succ:=S end
+   meth setPred(P) pred:=P end
+   meth kill(X S)
+      if @alive then
+         if S==1 then @last=@ident
+         elseif X mod @step==0 then
+            alive:=false
+            {@pred newsucc(@succ)}
+            {@succ newpred(@pred)}
+            {@succ kill(X+1 S-1)}
+         else
+            {@succ kill(X+1 S)}
+         end
+      else {@succ kill(X S)} end
+   end
+   meth newsucc(S)
+      if @alive then succ:=S
+      else {@pred newsucc(S)} end
+   end
+   meth newpred(P)
+      if @alive then pred:=P
+      else {@succ newpred(P)} end
+   end
+end
+
+declare
+fun {Josephus N K}
+   A={NewArray 1 N null}
+   Last
+in
+   for I in 1..N do
+      A.I:={NewActive Victim init(I K Last)}
+   end
+   for I in 2..N do {A.I setPred(A.(I-1))} end
+   {A.1 setPred(A.N)}
+   for I in 1..(N-1) do {A.I setSucc(A.(I+1))} end
+   {A.N setSucc(A.1)} {A.1 kill(1 N)}
+   Last
+end
+
+declare
+{Browse {Josephus 40 3}}
+{Browse {Josephus 1 3}}
+{Browse {Josephus 2 3}}
+{Browse {Josephus 3 3}}
+{Browse {Josephus 10 3}}
+
+declare
+fun {Pipe Xs L H F}
+   if L=<H then {Pipe {F Xs L} L+1 H F} else Xs end
+end
+
+fun {Josephus2 N K}
+   fun {Victim Xs I}
+      case Xs of kill(X S)|Xr then
+         if S==1 then Last=I nil
+         elseif X mod K == 0 then
+            kill(X+1 S-1)|Xr
+         else
+            kill(X+1 S)|{Victim Xr I}
+         end
+      [] nil then nil end
+   end
+   Last Zs
+in
+   Zs={Pipe kill(1 N)|Zs 1 N
+       fun {$ Is I} thread {Victim Is I} end end}
+   Last
+end
+
+declare
+{Browse {Josephus2 40 3}}
+{Browse {Josephus2 1 3}}
+{Browse {Josephus2 2 3}}
+{Browse {Josephus2 3 3}}
+{Browse {Josephus2 10 3}}
+
+% 7.8.4
+
+declare
+fun {NewSync Class Init}
+   P Obj={New Class Init} in
+   thread S in
+      {NewPort S P}
+      for M#X in S do {Obj M} X=unit end
+   end
+   proc {$ M} X in {Send P M#X} {Wait X} end
+end
+
+declare
+fun {NewActiveExc Class Init}
+   P Obj={New Class Init} in
+   thread S in
+      {NewPort S P}
+      for M#X in S do
+         try {Obj M} X=normal
+         catch E then X=exception(E) end
+      end
+   end
+   proc {$ M X} {Send P M#X} end
+end
+
+declare
+class EventManager
+   attr
+      handlers
+   meth init handlers:=nil end
+   meth event(E)
+      handlers:=
+      {Map @handlers fun {$ Id#F#S} Id#F#{F E S} end}
+   end
+   meth add(F S ?Id)
+      Id={NewName}
+      handlers:=Id#F#S|@handlers
+   end
+   meth delete(DId ?DS)
+      handlers:={List.partition
+                 @handlers fun {$ Id#_#_} DId==Id end [_#_#DS]}
+   end
+end
+
+declare
+EM={NewActive EventManager init}
+MemH=fun {$ E Buf} E|Buf end
+Id={EM add(MemH nil $)}
+DiskH=fun {$ E F} {F write(vs:E)} F end
+File={New Open.file init(name:'event.log'
+                         flags:[write create])}
+Buf={EM delete(Id $)}
+for E in {Reverse Buf} do {File write(vs:E)} end
+Id2={EM add(DiskH File $)}
+
+declare
+class ReplaceEventManager from EventManager
+   meth replace(NewF NewS OldId NewId
+                insert:P<=proc {$ _} skip end)
+      Buf=EventManager,delete(OldId $)
+   in
+      {P Buf}
+      NewId=EventManager,add(NewF NewS $)
+   end
+end
+
+declare
+EM={NewActive ReplaceEventManager init}
+MemH=fun {$ E Buf} E|Buf end
+Id={EM add(MemH nil $)}
+DiskH=fun {$ E F} {F write(vs:E)} F end
+File={New Open.file init(name:'event.log'
+                         flags:[write create])}
+Id2
+{EM replace(DiskH File Id Id2
+            insert:
+               proc {$ S}
+                  for E in {Reverse S} do
+                     {File write(vs:E)} end
+               end)}
+
+
+declare
+class Batcher
+   meth batch(L)
+      for X in L do
+         if {IsProcedure X} then {X} else {self X} end
+      end
+   end
+end
+class BatchingEventManager from EventManager Batcher end
+
+
+declare
+EM={NewActive BatchingEventManager init}
+MemH=fun {$ E Buf} E|Buf end
+Id={EM add(MemH nil $)}
+DiskH=fun {$ E F} {F write(vs:E)} F end
+File={New Open.file init(name:'event.log'
+                         flags:[write create])}
+Buf Id2
+{EM batch([delete(Id Buf)
+           proc {$}
+              for E in {Reverse Buf} do {File write(vs:E)} end
+           end
+           add(DiskH File Id2)])}
