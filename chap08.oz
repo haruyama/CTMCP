@@ -518,7 +518,7 @@ class TMClass
          Sync=ok
       else /* T.stamp\=@(C.owner).stamp */ T2=@(C.owner) in
          {C.queue.enqueue Sync#T T.stamp}
-         {T.state}:=waiting_on(C)
+         (T.state):=waiting_on(C)
          if T.stamp<T2.stamp then
             case @(T2.state) of waiting_on(C2) then
                Sync2#_={C2.queue.delete T2.stamp} in
@@ -599,3 +599,31 @@ C2={NewCellT 0}
        end _ _}
 {Browse {Trans fun {$ T} {T.access C1}#{T.access C2} end _}}
 
+declare
+D={MakeTuple db 100}
+for I in 1..100 do D.I={NewCellT I} end
+fun {Rand} {OS.rand} mod 100 + 1 end
+proc {Mix} {Trans
+            proc {$ T _}
+               I={Rand} J={Rand} K={Rand}
+               A={T.access D.I} B={T.access D.J} C={T.access D.K}
+            in
+               {T.assign D.I A+B-C}
+               {T.assign D.J A-B+C}
+               if I==J orelse I==K orelse J==K then {T.abort} end
+               {T.assign D.K ~A+B+C}
+            end _  _}
+end
+S={NewCellT 0}
+fun {Sum}
+   {Trans
+    fun {$ T} {T.assign S 0}
+       for I in 1..100 do
+          {T.assign S {T.access S}+{T.access D.I}} end
+       {T.access S}
+       end _}
+end
+{Browse {Sum}}
+for I in 1..1000 do thread {Mix} end end
+{Browse {Sum}}
+{Browse {Trans fun {$ T} {T.access D.1}#{T.access D.2} end _}}
