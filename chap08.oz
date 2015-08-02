@@ -350,4 +350,123 @@ in
    'lock'('lock':Lock)
 end
    
-            
+
+% 8.4.2
+
+declare
+fun {NewQueue}
+   X C={NewCell q(0 X X)}
+   L={NewLock}
+   proc {Insert X}
+      N S E1 in
+      lock L then
+         q(N S X|E1)=@C
+         C:=q(N+1 S E1)
+      end
+   end
+   fun {Delete}
+      N S1 E X in
+      lock L then
+         q(N X|S1 E)=@C
+         C:=q(N-1 S1 E)
+      end
+      X
+   end
+   fun {Size}
+      lock L then @C.1 end
+   end
+   fun {DeleteAll}
+      lock L then
+         X q(_ S E)=@C in
+         C:=q(0 X X)
+         E=nil S
+      end
+   end
+   fun {DeleteNonBlock}
+      lock L then
+         if {Size}>0 then [{Delete}] else nil end
+      end
+   end
+in
+   queue(insert:Insert delete:Delete size:Size
+         deleteAll:DeleteAll deleteNonBlock:DeleteNonBlock)
+end
+
+declare
+fun {NewGRLock}
+   Token1={NewCell unit}
+   Token2={NewCell unit}
+   CurThr={NewCell unit}
+   proc {GetLock}
+      if {Thread.this}\=@CurThr then Old New in
+         {Exchange Token1 Old New}
+         {Wait Old}
+         Token2:=New
+         CurThr:={Thread.this}
+      end
+   end
+   proc {ReleaseLock}
+      CurThr:=unit
+      unit=@Token2
+   end
+in
+   'lock'(get:GetLock release:ReleaseLock)
+end
+
+declare
+fun {NewMonitor}
+   Q={NewQueue}
+   L={NewGRLock}
+   proc {LockM P}
+      {L.get} try {P} finally {L.release} end
+   end
+   proc {WaitM}
+      X in
+      {Q.insert X} {L.release} {Wait X} {L.get}
+   end
+   proc {NotifyM}
+      U={Q.deleteNonBlock} in
+      case U of [X] then X=unit else skip end
+   end
+   proc {NotifyAllM}
+      L={Q.deleteAll} in
+      for X in L do X=unit end
+   end
+in
+   monitor('lock':LockM wait:WaitM notify:NotifyM
+           notifyAll:NotifyAllM)
+end
+
+declare
+class Buffer
+   attr m buf first last n i
+   meth init(N)
+      m:={NewMonitor}
+      buf:={NewArray 0 N-1 null}
+      first:=0 last:=0 n:=N i:=0
+   end
+   meth put(X)
+      {@m.'lock' proc {$}
+                    if @i>=@n then {@m.wait} {self put(X)}
+                    else
+                       @buf.last:=X
+                       last:=(@last+1) mod @n
+                       i:=@i+1
+                       {@m.notifyAll}
+                    end
+                 end}
+   end
+   meth get(X)
+      {@m.'lock' proc {$}
+                    if @i==0 then {@m.wait} {self get(X)}
+                    else
+                       X=@buf.first
+                       first:=(@first+1) mod @n
+                       i:=@i-1
+                       {@m.notifyAll}
+                    end
+                 end}
+   end
+end
+
+      
