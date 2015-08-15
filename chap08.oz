@@ -417,17 +417,23 @@ declare
 fun {NewMonitor}
    Q={NewQueue}
    L={NewGRLock}
+   
    proc {LockM P}
       {L.get} try {P} finally {L.release} end
    end
+   
    proc {WaitM}
+      % L.get した状態かチェック
+      % L.get と L.release を wrap して状態を管理するのがよさそう
       X in
       {Q.insert X} {L.release} {Wait X} {L.get}
    end
+   
    proc {NotifyM}
       U={Q.deleteNonBlock} in
       case U of [X] then X=unit else skip end
    end
+   
    proc {NotifyAllM}
       L={Q.deleteAll} in
       for X in L do X=unit end
@@ -449,7 +455,7 @@ class Buffer
       {@m.'lock' proc {$}
                     if @i>=@n then {@m.wait} {self put(X)}
                     else
-                       @buf.last:=X
+                       @buf.@last:=X
                        last:=(@last+1) mod @n
                        i:=@i+1
                        {@m.notifyAll}
@@ -460,7 +466,7 @@ class Buffer
       {@m.'lock' proc {$}
                     if @i==0 then {@m.wait} {self get(X)}
                     else
-                       X=@buf.first
+                       X=@buf.@first
                        first:=(@first+1) mod @n
                        i:=@i-1
                        {@m.notifyAll}
@@ -468,6 +474,13 @@ class Buffer
                  end}
    end
 end
+
+declare
+B={New Buffer init(2)}
+{B put(1)}
+{B put(2)}
+{B put(3)}
+{Browse {B get($)}}
 
 % 8.5
 
