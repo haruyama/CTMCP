@@ -424,7 +424,8 @@ fun {NewMonitor}
    
    proc {WaitM}
       % L.get した状態かチェック
-      % L.get と L.release を wrap して状態を管理するのがよさそう
+      % L.get と L.release を wrap して そのスレッドで
+      % get したかをを管理するのがよさそう
       X in
       {Q.insert X} {L.release} {Wait X} {L.get}
    end
@@ -479,11 +480,14 @@ declare
 B={New Buffer init(2)}
 {B put(1)}
 {B put(2)}
-{B put(3)}
+thread {B put(3)} {Browse 'hoge'} end
 {Browse {B get($)}}
 
 % 8.5
 
+% 2相ロック
+% http://metabolomics.jp/wiki/Aritalab:Lecture/Database/Transaction
+% 『一般に２相ロックという場合、「全要求を一度に許可」するプロトコルではなく、全てのロック要求を、ロック解除より前におこなうプロトコルを指します。この場合、２相ロックでデッドロックを回避できません。』
 
 declare
 class TMClass
@@ -492,7 +496,10 @@ class TMClass
    meth Unlockall(T RestoreFlag)
       for save(cell:C state:S) in {Dictionary.items T.save} do
          (C.owner):=unit
+         % 必要なら元に戻す
          if RestoreFlag then (C.state):=S end
+         % セルのキューが空でないなら最初のトランザクションを
+         % 実行状態に
          if {Not {C.queue.isEmpty}} then
             Sync2#T2={C.queue.dequeue} in
             (T2.state):=running
@@ -502,7 +509,7 @@ class TMClass
    end
    meth Trans(P ?R TS)
       Halt={NewName}
-      T=tarns(stamp:TS save:{NewDictionary} body:P
+      T=trans(stamp:TS save:{NewDictionary} body:P
               state:{NewCell running} result:R)
       proc {ExcT C X Y} S1 S2 in
          {@tm getlock(T C S1)}
@@ -514,15 +521,18 @@ class TMClass
       proc {AssT C X} {ExcT C _ X} end
       proc {AboT} {@tm abort(T)} R=abort raise Halt end end
    in
+      % トランザクション実行
       thread try Res={T.body t(access:AccT assign:AssT
                                exchange:ExcT abort:AboT)}
              in {@tm commit(T)} R=commit(Res)
              catch E then
+                % Halt でなければ  abort
                 if E\=Halt then {@tm abort(T)} R=abort(E) end
              end end
    end
    meth getlock(T C ?Sync)
       if @(T.state)==probation then
+         % リスタート
          {self Unlockall(T true)}
          {self Trans(T.body T.result T.stamp)} Sync=halt
       elseif @(C.owner)==unit then
@@ -533,7 +543,9 @@ class TMClass
          {C.queue.enqueue Sync#T T.stamp}
          (T.state):=waiting_on(C)
          if T.stamp<T2.stamp then
+            % T のほうが優先の場合
             case @(T2.state) of waiting_on(C2) then
+               % リスタート
                Sync2#_={C2.queue.delete T2.stamp} in
                {self Unlockall(T2 true)}
                {self Trans(T2.body T2.result T2.stamp)}
