@@ -101,3 +101,66 @@ end
    
 {Browse {SolveOne fun {$} {Queens 8} end}}
 {Browse {Length {SolveAll fun {$} {Queens 8} end}}}
+
+% 9.3
+
+% fun {Append Ls Ms}
+%    case Ls
+%    of nil then Ms
+%    [] X|Lr then X|{Append Lr Ms}
+%    end
+% end
+
+declare
+proc {Append A B ?C}
+   case A
+   of nil then C=B
+   [] X|As then Cs in
+      C=X|Cs
+      {Append As B Cs}
+   end
+end
+{Browse {Append [1 2 3] [4 5] $}}
+
+declare
+proc {Append ?A B C}
+   if B==C then A=nil
+   else
+      case C of X|Cs then As in
+         A=X|As
+         {Append As B Cs}
+      end
+   end
+end
+{Browse {Append $ [4 5] [1 2 3 4 5]}}
+% {Browse {Append $ [3 5] [1 2 3 4 5]}}
+
+% 9.3.3
+declare
+proc {Append ?A ?B ?C}
+   choice
+      A=nil B=C
+   [] As Cs X in
+      A=X|As C=X|Cs {Append As B Cs}
+   end
+end
+
+{Browse {SolveAll
+         proc {$ S} X#Y=S in {Append X Y [1 2 3]} end}}
+
+{Browse {SolveAll
+         proc {$ X} {Append [1 2] [3 4 5] X} end}}
+
+declare
+proc {Touch N H}
+   if N>0 then {Touch N-1 H.2} else skip end
+end
+
+declare
+L={Solve proc {$ S} X#Y#Z=S in {Append X Y Z} end}
+{Browse L}
+{Touch 1 L}
+{Touch 2 L}
+{Touch 3 L}
+{Touch 4 L}
+{Touch 5 L}
