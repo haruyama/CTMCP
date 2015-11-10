@@ -107,8 +107,121 @@ end
 {Browse {BestPlan tokyo la}}
 
 
-
-
-
 % c
 % ダイクストラ法
+
+% 9.4
+
+declare
+SlotRel={New RelationClass init}
+{SlotRel
+ assertall([
+            slot(mon am cataloger 1)
+            slot(mon am checkoutclerk 1)
+            slot(mon pm checkoutclerk 1)
+            slot(mon am shelver 2)            
+            slot(mon pm shelver 2)
+
+            slot(tue am cataloger 1)
+            slot(tue am checkoutclerk 1)
+            slot(tue pm checkoutclerk 1)
+            slot(tue am shelver 2)            
+            slot(tue pm shelver 2)
+
+            slot(wed am cataloger 1)
+            slot(wed am checkoutclerk 1)
+            slot(wed pm checkoutclerk 1)
+            slot(wed am shelver 2)            
+            slot(wed pm shelver 2)
+
+            slot(thu am cataloger 1)
+            slot(thu am checkoutclerk 1)
+            slot(thu pm checkoutclerk 1)
+            slot(thu am shelver 2)            
+            slot(thu pm shelver 2)
+
+            slot(fri am cataloger 1)
+            slot(fri am checkoutclerk 1)
+            slot(fri pm checkoutclerk 1)
+            slot(fri am shelver 2)            
+            slot(fri pm shelver 2)
+           ])}
+PersonRel={New RelationClass init}
+{PersonRel
+ assertall([
+            person(alice 6 8 2 [mon tue thu fri])
+            person(bob 7 10 2 [mon tue wed thu fri])
+            person(carol 3 5 1 [mon tue wed thu fri])
+            person(don 6 8 2 [mon tue wed])
+            person(ellen 0 2 1 [thu fri])
+            person(fred 7 10 2 [mon tue wed thu fri])
+           ])}
+JobRel={New RelationClass init}
+{JobRel
+ assertall([
+            job(cataloger [fred alice])
+            job(checkoutclerk [bob carol fred])
+            job(shelver [bob carol fred don ellen alice])
+           ])}
+
+% a
+
+declare
+fun {WeekDayG}
+   {List.nth [mon tue wed thu fri] {Space.choose 5}}
+end
+fun {ShiftG}
+   choice
+      am
+   []
+      pm
+   end
+end
+fun {JobG}
+   choice
+      cataloger
+   []
+      checkoutclerk
+   []
+      shelver
+   end
+end
+fun {PersonG}
+   {List.nth [alice bob carol don ellen fred] {Space.choose 6}}
+end
+
+
+declare
+proc {PersonP Name Job WeekDay}
+   local WeekDays Names in
+      {PersonRel query(person(Name _ _ _ WeekDays))}
+      {Member WeekDay WeekDays}=true
+      {JobRel query(job(Job Names))}
+      {Member Name Names}=true
+   end
+end
+proc {SlotP WeekDay Shift Job}
+   {SlotRel query(slot(WeekDay Shift Job _))}
+end
+
+
+declare
+{Browse {SolveAll proc {$ N} {PersonP N shelver fri} end}}
+{Browse {SolveAll proc {$ N} {PersonP N cataloger mon } end}}
+
+
+declare
+proc {Assignment ?A}
+   local WeekDay Shift Job Person in
+      WeekDay={WeekDayG}
+      Shift={ShiftG}
+      Job={JobG}
+      Person={PersonG}
+      {PersonP Person Job WeekDay}
+      {SlotP WeekDay Shift Job}
+      A=assignment(WeekDay Shift Job Person)
+   end
+end
+
+{Browse {SolveAll Assignment}}      
+
