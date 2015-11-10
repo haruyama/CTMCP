@@ -308,3 +308,54 @@ end
 
 {Browse {SolveOne Assignments}}
      
+% 5
+declare L
+L={SolveAll fun {$} choice 1 [] 2 [] 3 end end}
+{Browse L}
+
+declare S P={NewPort S}
+thread for X#Y in S do {Browse p(X)} Y=unit end end
+L={SolveAll fun {$}
+               choice Y in {Port.sendRecv P 1 Y} {Wait Y} 1
+               [] Y in {Port.sendRecv P 2 Y} {Wait Y} 2
+               [] Y in {Port.sendRecv P 3 Y} {Wait Y} 3
+               end end}
+{Browse L}
+
+% Port の利用まで
+declare
+proc {Choose ?X Ys}
+   choice Ys=X|_
+   [] Yr in Ys=_|Yr {Choose X Yr} end
+end
+class PortRelationClass
+   attr d
+   meth init(S)
+      d:={NewDictionary}
+      thread for X#Y in S do {self X} Y=unit end end
+   end
+   meth assertall(Is)
+      for I in Is do {self assert(I)} end
+   end
+   meth assert(I)
+      if {IsDet I.1} then
+         Is={Dictionary.condGet @d I.1 nil} in
+         {Dictionary.put @d I.1 {Append Is [I]}}
+      else
+         raise databaseError(nonground(I)) end
+      end
+   end
+   meth query(I)
+      if {IsDet I} andthen {IsDet I.1} then
+         {Choose I {Dictionary.condGet @d I.1 nil}}
+      else
+         {Choose I {Flatten {Dictionary.items @d}}}
+      end
+   end
+end
+
+declare S P={NewPort S} Y
+TestRel={New PortRelationClass init(S)}
+{Browse {SolveAll proc {$ N} {TestRel query(test(N))} end}}
+{Port.sendRecv P assert(test(1)) Y} {Wait Y}
+{Browse {SolveAll proc {$ N} {TestRel query(test(N))} end}}
