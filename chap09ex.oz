@@ -227,6 +227,7 @@ end
                               %{Browse {SolveAll Assignment}}
 {Browse {Length {SolveAll proc {$ N} {SlotRel query(_)} end}}}
 
+% TODO: 日間勤務可能シフト数がまだ
 declare
 proc {Assignments ?As}
    local SlotNum in
