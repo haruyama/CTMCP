@@ -359,3 +359,76 @@ TestRel={New PortRelationClass init(S)}
 {Browse {SolveAll proc {$ N} {TestRel query(test(N))} end}}
 {Port.sendRecv P assert(test(1)) Y} {Wait Y}
 {Browse {SolveAll proc {$ N} {TestRel query(test(N))} end}}
+
+% 6
+
+declare
+Rules=rules(
+         fun {$} X Y Xr in
+            [g(stack(X|Y|Xr)) f(supports(X Y))] #
+            [remove(g(stack(X|Y|Xr))) add(g(stack(Y|Xr)))]
+         end
+         fun {$} X Y Z Xr in
+            [g(stack(X|Y|Xr))
+             'not'(fun {$} U in f(supports(X U)) end)
+             'not'(fun {$} U in f(supports(Y U)) end)
+             f(supports(Z Y))] #
+            [remove(f(supports(Z Y))) add(f(supports(X Y)))
+             remove(g(stack(X|Y|Xr))) add(g(stack(Y|Xr)))]
+         end
+         fun {$} X Y Xr Z in
+            [g(stack(X|Y|Xr)) f(supports(X Z)) notEqual(Y Z)
+             'not' (fun {$} g(move(Z)) end)] #
+            [add(g(move(Z)))]
+         end
+         fun {$} X Y Xr in
+            [g(stack(_|X|Xr)) f(supports(X Y))
+             'not' (fun {$} g(move(Y)) end)] #
+            [add(g(move(Y)))]
+         end
+         fun {$} X in
+            [g(stack([X])) f(supports(floor X))
+             'not'(fun {$} U in f(supports(X U)) end)] #
+            [remove(g(stack[X]))]
+         end
+         fun {$} X Y in
+            [g(move(X)) f(supports(X Y))
+             'not'(fun {$} g(move(Y)) end)] #
+            [add(g(move(Y)))]
+         end
+         fun {$} X Y in
+            [g(move(X))
+             'not'(fun {$} U in f(supports(X U)) end)
+             f(supports(Y X))] #
+            [remove(f(supports(Y X))) add(f(supports(floor X)))
+             remove(g(move(X)))]
+         end)
+
+% 1から作るのは面倒
+declare
+proc {ConditionParse Conds DB}
+   proc {Iter Conds}
+      case Conds
+      of C|Cs then
+         {Browse C}
+         {Iter Cs}
+      else skip
+      end
+   end
+in
+   {Iter {Conds}}
+end
+
+{ConditionParse 
+ fun {$} X Y in
+            [g(move(X))
+             'not'(fun {$} U in f(supports(X U)) end)
+             f(supports(Y X))]
+ end
+ nil}
+{Browse a}
+{fun {$} X Y in
+    [g(move(X))
+     'not'(fun {$} U in f(supports(X U)) end)
+     f(supports(Y X))]]
+end}
