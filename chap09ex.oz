@@ -250,12 +250,11 @@ end
 {Browse {CalcAllSlotCount}}
 {Browse {Length {SolveAll proc {$ N} {SlotRel query(_)} end}}}
 
-% TODO: 日間勤務可能シフト数がまだ
 declare
 proc {Assignments ?As}
    local SlotCount in
       SlotCount={CalcAllSlotCount}
-      {AssignmentsIter nil {NewDictionary} ?As SlotCount}
+      {AssignmentsIter nil {NewDictionary} {NewDictionary} ?As SlotCount}
    end
 end
 fun {SlotKey WeekDay Shift Job}
@@ -266,20 +265,32 @@ fun {SlotKey WeekDay Shift Job}
      }
      {AtomToString WeekDay}}}
 end
-proc {AssignmentsIter Trace SlotDic ?As SlotCount}
+fun {DailyShiftKey WeekDay Person}
+   {StringToAtom
+    {Append
+      {AtomToString WeekDay} {AtomToString Person}
+     }}
+end
+proc {AssignmentsIter Trace SlotDic DailyShiftDic ?As SlotCount}
    if {Length Trace}==SlotCount then
       Trace=As
-   else A AWeekDay AShift AJob Sc Sd in
+   else A AWeekDay AShift AJob Sc Sd APerson Dc Dd in
       {Assignment A}
-      A=assignment(AWeekDay AShift AJob _)
+      A=assignment(AWeekDay AShift AJob APerson)
       Sc={Dictionary.condGet SlotDic {SlotKey AWeekDay AShift AJob} 0}
       {SlotRel query(slot(AWeekDay AShift AJob Sd))}
       if Sc >= Sd then
          fail
       end
+      Dc={Dictionary.condGet DailyShiftDic {DailyShiftKey AWeekDay APerson} 0}
+      {PersonRel query(person(APerson _ _ Dd _))}
+      if Dc >= Dd then
+         fail
+      end
       {CheckAssignments A Trace}
       {Dictionary.put SlotDic {SlotKey AWeekDay AShift AJob} Sc+1}
-      {AssignmentsIter A|Trace SlotDic As SlotCount}
+      {Dictionary.put DailyShiftDic {DailyShiftKey AWeekDay APerson} Dc+1}
+      {AssignmentsIter A|Trace SlotDic DailyShiftDic As SlotCount}
    end
 end
 proc {CheckAssignments A Trace}
@@ -296,4 +307,4 @@ proc {CheckAssignments A Trace}
 end
 
 {Browse {SolveOne Assignments}}
-      
+     
