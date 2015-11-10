@@ -122,29 +122,29 @@ SlotRel={New RelationClass init}
             slot(mon am shelver 2)            
             slot(mon pm shelver 2)
 
-            slot(tue am cataloger 1)
-            slot(tue am checkoutclerk 1)
-            slot(tue pm checkoutclerk 1)
-            slot(tue am shelver 2)            
-            slot(tue pm shelver 2)
+            % slot(tue am cataloger 1)
+            % slot(tue am checkoutclerk 1)
+            % slot(tue pm checkoutclerk 1)
+            % slot(tue am shelver 2)            
+            % slot(tue pm shelver 2)
 
-            slot(wed am cataloger 1)
-            slot(wed am checkoutclerk 1)
-            slot(wed pm checkoutclerk 1)
-            slot(wed am shelver 2)            
-            slot(wed pm shelver 2)
+            % slot(wed am cataloger 1)
+            % slot(wed am checkoutclerk 1)
+            % slot(wed pm checkoutclerk 1)
+            % slot(wed am shelver 2)            
+            % slot(wed pm shelver 2)
 
-            slot(thu am cataloger 1)
-            slot(thu am checkoutclerk 1)
-            slot(thu pm checkoutclerk 1)
-            slot(thu am shelver 2)            
-            slot(thu pm shelver 2)
+            % slot(thu am cataloger 1)
+            % slot(thu am checkoutclerk 1)
+            % slot(thu pm checkoutclerk 1)
+            % slot(thu am shelver 2)            
+            % slot(thu pm shelver 2)
 
-            slot(fri am cataloger 1)
-            slot(fri am checkoutclerk 1)
-            slot(fri pm checkoutclerk 1)
-            slot(fri am shelver 2)            
-            slot(fri pm shelver 2)
+            % slot(fri am cataloger 1)
+            % slot(fri am checkoutclerk 1)
+            % slot(fri pm checkoutclerk 1)
+            % slot(fri am shelver 2)            
+            % slot(fri pm shelver 2)
            ])}
 PersonRel={New RelationClass init}
 {PersonRel
@@ -205,9 +205,9 @@ proc {SlotP WeekDay Shift Job}
 end
 
 
-declare
-{Browse {SolveAll proc {$ N} {PersonP N shelver fri} end}}
-{Browse {SolveAll proc {$ N} {PersonP N cataloger mon } end}}
+%declare
+%{Browse {SolveAll proc {$ N} {PersonP N shelver fri} end}}
+%{Browse {SolveAll proc {$ N} {PersonP N cataloger mon } end}}
 
 
 declare
@@ -223,5 +223,53 @@ proc {Assignment ?A}
    end
 end
 
-{Browse {SolveAll Assignment}}      
 
+                              %{Browse {SolveAll Assignment}}
+{Browse {Length {SolveAll proc {$ N} {SlotRel query(_)} end}}}
+
+declare
+proc {Assignments ?As}
+   local SlotNum in
+      SlotNum={Length {SolveAll proc {$ N} {SlotRel query(_)} end}}
+      {AssignmentsIter nil {NewDictionary} ?As SlotNum}
+   end
+end
+fun {SlotKey WeekDay Shift Job}
+   {StringToAtom
+    {Append
+     {Append 
+      {AtomToString Job} {AtomToString Shift}
+     }
+     {AtomToString WeekDay}}}
+end
+proc {AssignmentsIter Trace SlotDic ?As SlotNum}
+   if {Length Trace}==SlotNum then
+      Trace=As
+   else A AWeekDay AShift AJob Sc Sd in
+      {Assignment A}
+      A=assignment(AWeekDay AShift AJob _)
+      Sc={Dictionary.condGet SlotDic {SlotKey AWeekDay AShift AJob} 0}
+      {SlotRel query(slot(AWeekDay AShift AJob Sd))}
+      if Sc >= Sd then
+         fail
+      end
+      {CheckAssignments A Trace}
+      {Dictionary.put SlotDic {SlotKey AWeekDay AShift AJob} Sc+1}
+      {AssignmentsIter A|Trace SlotDic As SlotNum}
+   end
+end
+proc {CheckAssignments A Trace}
+   if Trace==nil then
+      skip
+   else T|Tr=Trace AWeekDay AShift APerson TWeekDay TShift TPerson in
+      A=assignment(AWeekDay AShift _ APerson)
+      T=assignment(TWeekDay TShift _ TPerson)
+      if APerson==TPerson andthen AWeekDay==TWeekDay andthen AShift==TShift then
+         fail
+      end
+      {CheckAssignments A Tr}
+   end
+end
+
+{Browse {SolveOne Assignments}}
+      
