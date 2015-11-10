@@ -224,15 +224,38 @@ proc {Assignment ?A}
 end
 
 
-                              %{Browse {SolveAll Assignment}}
+%{Browse {SolveAll Assignment}}
+
+declare
+fun {CalcAllSlotCount}
+   local
+      fun {Iter C Slots}
+         if Slots==nil then
+            C
+         else S|Sr=Slots Cs in
+            S=slot(_ _ _ Cs)
+            {Iter C+Cs Sr}
+         end
+      end
+      proc {SlotPP ?X} A B C D in
+         {SlotRel query(slot(A B C D))}
+         X=slot(A B C D)
+      end
+   in
+      {Iter 0 {SolveAll SlotPP}}
+   end
+end
+
+
+{Browse {CalcAllSlotCount}}
 {Browse {Length {SolveAll proc {$ N} {SlotRel query(_)} end}}}
 
 % TODO: 日間勤務可能シフト数がまだ
 declare
 proc {Assignments ?As}
-   local SlotNum in
-      SlotNum={Length {SolveAll proc {$ N} {SlotRel query(_)} end}}
-      {AssignmentsIter nil {NewDictionary} ?As SlotNum}
+   local SlotCount in
+      SlotCount={CalcAllSlotCount}
+      {AssignmentsIter nil {NewDictionary} ?As SlotCount}
    end
 end
 fun {SlotKey WeekDay Shift Job}
@@ -243,8 +266,8 @@ fun {SlotKey WeekDay Shift Job}
      }
      {AtomToString WeekDay}}}
 end
-proc {AssignmentsIter Trace SlotDic ?As SlotNum}
-   if {Length Trace}==SlotNum then
+proc {AssignmentsIter Trace SlotDic ?As SlotCount}
+   if {Length Trace}==SlotCount then
       Trace=As
    else A AWeekDay AShift AJob Sc Sd in
       {Assignment A}
@@ -256,7 +279,7 @@ proc {AssignmentsIter Trace SlotDic ?As SlotNum}
       end
       {CheckAssignments A Trace}
       {Dictionary.put SlotDic {SlotKey AWeekDay AShift AJob} Sc+1}
-      {AssignmentsIter A|Trace SlotDic As SlotNum}
+      {AssignmentsIter A|Trace SlotDic As SlotCount}
    end
 end
 proc {CheckAssignments A Trace}
