@@ -67,3 +67,25 @@ in
    {FD.distribute ff [X Y Z]}
 end
 {Browse {SolveAll Palindrome}}
+
+% 12.4
+
+declare
+fun {DFE S}
+   case {Space.ask S}
+   of failed then nil
+   [] succeeded then [S]
+   [] alternatives(2) then C={Space.clone S} in
+      {Space.commit S 1}
+      case {DFE S} of nil then {Space.commit C 2} {DFE C}
+      [] [T] then [T]
+      end
+   end
+end
+fun {DFS Script}
+   case {DFE {Space.new Script}} of nil then nil
+   [] [S] then [{Space.merge S}]
+   end
+end
+
+{Browse {DFS Rectangle}}
