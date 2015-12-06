@@ -53,3 +53,20 @@ end
 {Browse {SolveAll {AbsDiffTri 5}}}
 {Browse {SolveAll {AbsDiffTri 6}}}
 {Browse {SolveAll {AbsDiffTri 7}}}
+
+% 2
+declare
+proc {Yaoya ?Sol}
+   A B C D
+in
+   Sol=sol(a:A b:B c:C d:D)
+   Sol:::1#711
+   A*B*C*D=:7110000
+   A+B+C+D=:711
+   A=<:B
+   B=<:C
+   C=<:D
+   {FD.distribute ff Sol}
+end
+{Browse {SolveAll Yaoya}}
+   
