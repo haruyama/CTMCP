@@ -110,7 +110,9 @@ in
    % f
    BG=:DC
    % g
-   BG=:BW+1
+   % BG=:BW+1
+   % より後にするととける
+   BG>:BW
    % h
    JC=:PS
    % i
@@ -127,7 +129,7 @@ in
    {FD.distance PH JDI '=:' 1}
    % o
    % https://en.wikipedia.org/wiki/Zebra_Puzzle によると o に対応する項目がない
-%   PZ=:BW
+   PZ=:BW
    
    {FD.distribute ff B}
    {FD.distribute ff J}
@@ -136,3 +138,44 @@ in
    {FD.distribute ff P}
 end
 {Browse {SolveAll Zebra}}
+
+% 4
+declare
+fun {Exc A T N}
+   proc {$ ?Sol}
+      {List.make {Length T} Sol}
+      for I in 1..{Length T} do
+         {Nth Sol I}::1#{Nth N I}
+      end
+      {FD.sumC T Sol '=:' A}
+      {FD.distribute ff Sol}
+   end
+end
+
+% この場合は1つしかない
+{Browse {SolveAll {Exc 142 [100 25 10 5 1] [6 8 10 1 5]}}}
+
+{Browse {SolveAll {Exc 342 [100 25 10 5 1] [6 8 10 1 5]}}}
+
+declare
+fun {MinExc A T N}
+   As={SolveAll {Exc A T N}}
+   fun {Iter As R RS}
+      case As
+      of A|Ar then AS={List.foldL A fun {$ X Y} X+Y end 0} in
+         if RS>AS then
+            {Iter Ar A AS}
+         else
+            {Iter Ar R RS}
+         end
+      else
+         R
+      end
+   end
+in
+   {Iter As nil 999999}
+end
+
+{Browse {MinExc 342 [100 25 10 5 1] [6 8 10 1 5]}}
+      
+   
