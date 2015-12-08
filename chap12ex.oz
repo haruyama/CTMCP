@@ -54,15 +54,16 @@ end
 {Browse {SolveAll {AbsDiffTri 6}}}
 {Browse {SolveAll {AbsDiffTri 7}}}
 
+
 % 2
 declare
 proc {Yaoya ?Sol}
-   A B C D
+   A#B#C#D=Sol
+   S=711
 in
-   Sol=sol(a:A b:B c:C d:D)
-   Sol:::1#711
-   A*B*C*D=:7110000
-   A+B+C+D=:711
+   Sol:::1#S
+   A+B+C+D=:S
+   A*B*C*D=:S*100*100*100
    A=<:B
    B=<:C
    C=<:D
@@ -145,14 +146,13 @@ fun {Exc A T N}
    proc {$ ?Sol}
       {List.make {Length T} Sol}
       for I in 1..{Length T} do
-         {Nth Sol I}::1#{Nth N I}
+         {Nth Sol I}::0#{Nth N I}
       end
       {FD.sumC T Sol '=:' A}
       {FD.distribute ff Sol}
    end
 end
 
-% この場合は1つしかない
 {Browse {SolveAll {Exc 142 [100 25 10 5 1] [6 8 10 1 5]}}}
 
 {Browse {SolveAll {Exc 342 [100 25 10 5 1] [6 8 10 1 5]}}}
